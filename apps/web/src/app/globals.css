@@ -1,0 +1,273 @@
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --border: #e6e2dc;
+  --ink: #1b1917;
+  --muted: #6f6862;
+  --accent: #1c6b4a;
+  --accent-ink: #ffffff;
+  --danger: #a8321f;
+  --warn-bg: #fdf6e3;
+  --warn-border: #e8d9a8;
+  --radius: 10px;
+  --maxw: 1080px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  position: relative;
+  font: 15px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; position: relative; }
+
+/* ---- cityscape backdrop --------------------------------------------------
+   The Cityscape Blue scarf artwork, sitting behind the whole page. It is
+   fixed, so content scrolls over a still skyline rather than dragging a busy
+   pattern with it.
+
+   Two things keep it from wrecking legibility: it is heavily faded, and a
+   near-opaque scrim sits between it and the content. Product photos are
+   mostly white-background cut-outs, and text has to stay readable on a phone
+   in daylight — the artwork earns its place as atmosphere, not as decoration
+   competing with the goods.
+
+   It is a 1200px JPEG derived from the 1.3MB source PNG (174KB): a page
+   background loads on every single view, including on mobile data. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image: url("/bg-cityscape.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Lighter at the top so the skyline reads behind the header, denser lower
+     down where the tables and forms live. */
+  background: linear-gradient(
+    180deg,
+    rgba(251, 250, 248, 0.72) 0%,
+    rgba(251, 250, 248, 0.88) 38%,
+    rgba(251, 250, 248, 0.95) 100%
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .backdrop { transition: opacity .4s ease; }
+}
+
+/* ---- header ---- */
+.site-header {
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(140%) blur(10px);
+  position: sticky; top: 0; z-index: 20;
+}
+.site-header .wrap {
+  display: flex; align-items: center; gap: 24px; height: 60px;
+}
+.brand { font-weight: 650; letter-spacing: -0.01em; text-decoration: none; font-size: 16px; }
+.nav { display: flex; gap: 18px; margin-left: auto; align-items: center; flex-wrap: wrap; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; }
+.nav a:hover, .nav a[data-active="true"] { color: var(--ink); }
+
+.cart-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--ink); color: #fff; text-decoration: none;
+  padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 550;
+}
+
+/* ---- typography ---- */
+h1 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; }
+h2 { font-size: 18px; letter-spacing: -0.01em; margin: 0 0 12px; }
+.lede { color: var(--muted); margin: 0 0 26px; }
+.page { padding: 32px 0 64px; }
+
+/* ---- category chips ---- */
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 26px; }
+.chip {
+  text-decoration: none; font-size: 13px; padding: 6px 13px;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+  color: var(--muted);
+}
+.chip[data-active="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* ---- product grid ---- */
+.grid {
+  display: grid; gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; text-decoration: none;
+  display: flex; flex-direction: column;
+  transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+}
+.card:hover {
+  border-color: #cfc8c0;
+  box-shadow: 0 6px 20px rgba(27, 25, 23, .09);
+  transform: translateY(-2px);
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 1;
+  background: #fff;
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+.thumb-empty {
+  color: #b3aaa1; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+}
+
+/* Product shots are cut-outs on white, so contain (not cover) — cropping a
+   t-shirt to fill a square cuts the print off. */
+.thumb-img { object-fit: contain; padding: 8%; }
+
+/* The front/back flip. Both images are already in the DOM; hover crossfades
+   to the second. `pointer-events: none` keeps the overlay from swallowing the
+   click that follows the link. */
+.thumb-img-hover {
+  opacity: 0;
+  transition: opacity .28s ease;
+  pointer-events: none;
+}
+.card:hover .thumb-img-hover,
+.card:focus-visible .thumb-img-hover { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb-img-hover { transition: none; }
+  .card { transition: none; }
+  .card:hover { transform: none; }
+}
+.card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 3px; }
+.card-name { font-weight: 550; font-size: 14px; }
+.card-price { font-variant-numeric: tabular-nums; }
+.card-meta { color: var(--muted); font-size: 12px; }
+
+/* ---- panels / forms ---- */
+.panel {
+  background: rgba(255, 255, 255, 0.93);
+  border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.stack { display: flex; flex-direction: column; gap: 14px; }
+label { display: block; font-size: 13px; font-weight: 550; margin-bottom: 5px; }
+input, textarea, select {
+  width: 100%; font: inherit; padding: 9px 11px;
+  border: 1px solid var(--border); border-radius: 8px; background: #fff; color: inherit;
+}
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+.btn {
+  font: inherit; font-weight: 550; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink);
+  border: 1px solid var(--accent); border-radius: 8px; padding: 10px 16px;
+  text-decoration: none; display: inline-block; text-align: center;
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--border); }
+.btn-link { background: none; border: none; color: var(--muted); text-decoration: underline; padding: 0; cursor: pointer; font: inherit; }
+
+/* ---- tables ---- */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.scroll-x { overflow-x: auto; }
+
+/* ---- status badges ---- */
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .03em;
+  padding: 2px 8px; border-radius: 999px; border: 1px solid;
+  text-transform: uppercase;
+}
+.badge-pending_payment, .badge-pending { background: #fdf6e3; border-color: #e8d9a8; color: #7a5c12; }
+.badge-paid, .badge-matched, .badge-sent { background: #e7f3ec; border-color: #b8ddc7; color: #14603f; }
+.badge-expired, .badge-cancelled, .badge-ignored { background: #f1efec; border-color: #ddd7d0; color: #6f6862; }
+.badge-manual_review, .badge-unmatched, .badge-parse_failed { background: #fdeee9; border-color: #f2c9bc; color: #9c3a20; }
+.badge-rejected, .badge-failed, .badge-dead { background: #fbe4e0; border-color: #eeb4a8; color: #8e2a16; }
+
+/* ---- notices ---- */
+.notice { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.notice-warn { background: var(--warn-bg); border-color: var(--warn-border); }
+.notice-error { background: #fdeee9; border-color: #f2c9bc; color: #8e2a16; }
+.notice-info { background: #eef3f7; border-color: #cddbe6; }
+
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 20px; font-weight: 600; letter-spacing: .06em;
+}
+.muted { color: var(--muted); }
+.empty { color: var(--muted); padding: 36px 0; text-align: center; }
+.row-split { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.divider { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+.cols { display: grid; gap: 24px; grid-template-columns: 1.4fr 1fr; align-items: start; }
+@media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+
+
+/* ---- product gallery ---- */
+.gallery { display: flex; flex-direction: column; gap: 12px; }
+.gallery-main {
+  position: relative;
+  aspect-ratio: 1;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: grid; place-items: center;
+  padding: 4%;
+}
+.gallery-strip { display: flex; gap: 8px; flex-wrap: wrap; }
+.gallery-thumb {
+  position: relative;
+  width: 72px; height: 72px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: #fff; padding: 4px; cursor: pointer;
+  overflow: hidden;
+  transition: border-color .12s ease;
+}
+.gallery-thumb img { object-fit: contain; }
+.gallery-thumb[data-active="true"] { border-color: var(--ink); border-width: 2px; }
+.gallery-thumb:hover { border-color: #cfc8c0; }
+
+/* ---- variant swatches ---- */
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.swatch {
+  font: inherit; font-size: 13px; cursor: pointer;
+  padding: 8px 14px; border-radius: 8px;
+  border: 1px solid var(--border); background: #fff; color: var(--ink);
+  transition: border-color .12s ease, background .12s ease;
+}
+.swatch:hover:not(:disabled) { border-color: #b3aaa1; }
+.swatch[data-active="true"] {
+  border-color: var(--ink); background: var(--ink); color: #fff;
+}
+.swatch:disabled {
+  opacity: .45; cursor: not-allowed; text-decoration: line-through;
+}
+.swatch-out { font-size: 11px; }
+
+/* ---- cart line thumbnails ---- */
+.cart-line { display: flex; gap: 12px; align-items: flex-start; }
+.cart-thumb {
+  position: relative; flex: 0 0 56px; width: 56px; height: 56px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: #fff; overflow: hidden;
+}
+.cart-thumb img { object-fit: contain; padding: 4px; }
