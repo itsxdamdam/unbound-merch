@@ -195,7 +195,11 @@ bank account behind it.
 
 ## Notes
 
-- `next dev`/`next build` run under **Turbopack**. On Node 25, webpack's cache
-  serializer trips a V8 abort (`Lazy deopt after a fast API call`); Turbopack
-  doesn't take that path.
+- `next dev` runs under **Turbopack**; `next build` does not. On Node 25,
+  webpack's cache serializer trips a V8 abort (`Lazy deopt after a fast API
+  call`), which is why dev uses Turbopack. Production builds use webpack — it
+  is Next's default, the most-trodden path on Vercel, and produces a smaller
+  bundle here (103 kB shared vs 122 kB). Vercel runs Node 22, where the webpack
+  bug does not exist. To build locally on Node 25, use `npm run build:turbopack`
+  in `apps/web`, or switch to Node 22.
 - Money is integer kobo as `BigInt` throughout. Never floats.
