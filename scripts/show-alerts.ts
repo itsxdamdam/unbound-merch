@@ -1,5 +1,5 @@
 /** What the review queue holds right now, as a table. `npm run alerts` */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../packages/db/src/generated/client";
 import { formatKobo } from "../packages/db/src/money";
 
 import { loadRootEnv } from "../packages/db/src/env";

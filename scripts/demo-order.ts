@@ -12,7 +12,7 @@
  * does. Verification, parsing and matching are left to the worker, so what
  * this exercises is the real pipeline rather than a parallel one.
  */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../packages/db/src/generated/client";
 import { createOrder } from "../packages/db/src/orders/createOrder";
 import { formatKobo } from "../packages/db/src/money";
 import { FIXTURES } from "../apps/web/src/lib/alertFixtures";

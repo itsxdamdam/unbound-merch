@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@store/db/prisma";
 
 /**
  * The seam every outbound message passes through.

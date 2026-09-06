@@ -9,6 +9,18 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Generated INTO THE REPO, not into node_modules.
+  //
+  // The default output is "wherever @prisma/client resolves to", which depends
+  // on how the installer hoisted the monorepo. On a machine that nests a
+  // second copy under apps/web/node_modules, `prisma generate` writes to the
+  // root copy while the app imports the nested stub — and the failure is a
+  // wall of implicit-any type errors that never mentions Prisma.
+  //
+  // An explicit in-repo path is the same on every machine, and does not depend
+  // on @prisma/client's postinstall having been allowed to run (npm 11.11
+  // gates install scripts, and Vercel does not run them).
+  output   = "../src/generated/client"
 }
 
 datasource db {

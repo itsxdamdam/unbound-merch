@@ -14,7 +14,7 @@
  * order they just paid for. Everything below is the second line of defence.
  */
 
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@store/db/prisma";
 
 export interface GovernorConfig {
   /** Minimum gap between two outbound sends. */

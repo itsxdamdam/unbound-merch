@@ -11,7 +11,9 @@
     "./reference": "./src/reference.ts",
     "./categories": "./src/categories.ts",
     "./orders": "./src/orders/index.ts",
-    "./env": "./src/env.ts"
+    "./env": "./src/env.ts",
+    "./prisma": "./src/prisma.ts",
+    "./package.json": "./package.json"
   },
   "dependencies": {
     "@prisma/client": "^6.16.1"

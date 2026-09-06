@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@store/db/prisma";
 import { normalizeEmail } from "../imap/normalize";
 import { verifyAlertSender } from "../imap/verifySender";
 import { parseAlertEmail } from "../imap/parsers/registry";

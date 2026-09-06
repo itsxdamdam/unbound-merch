@@ -1,7 +1,7 @@
 // Prisma is a value import, not a type-only one: Prisma.join builds the
 // FOR UPDATE lock query below.
-import { Prisma } from "@prisma/client";
-import type { PrismaClient } from "@prisma/client";
+import { Prisma } from "../generated/client";
+import type { PrismaClient } from "../generated/client";
 import { generateReferenceCode } from "../reference";
 import { EmptyCartError, InsufficientStockError } from "./errors";
 

@@ -1,4 +1,4 @@
-import { PrismaClient, type Category } from "@prisma/client";
+import { PrismaClient, type Category } from "../src/generated/client";
 
 import { loadRootEnv } from "../src/env";
 

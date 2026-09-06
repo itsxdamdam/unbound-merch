@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@store/db/prisma";
 import { confirmPayment, PaymentConfirmationError } from "@store/db/orders";
 import type { ParsedAlert } from "./parsers/types";
 

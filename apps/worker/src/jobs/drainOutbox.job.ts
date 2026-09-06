@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@store/db/prisma";
 import { checkQuota, configFromEnv, inQuietHours } from "../whatsapp/governor";
 import { sendWhatsAppMessage, type WhatsAppDriver } from "../whatsapp/send";
 

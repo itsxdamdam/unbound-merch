@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./generated/client";
 import { loadRootEnv } from "./env";
 
 // Must run before the client is constructed: Prisma resolves env("DATABASE_URL")

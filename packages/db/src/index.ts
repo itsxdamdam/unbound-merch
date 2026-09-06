@@ -13,7 +13,7 @@ export type {
   WhatsAppMessage,
   OrderEvent,
   AdminUser,
-} from "@prisma/client";
+} from "./generated/client";
 export {
   Category,
   OrderStatus,
@@ -22,4 +22,4 @@ export {
   PaymentSource,
   MessageDirection,
   NotificationStatus,
-} from "@prisma/client";
+} from "./generated/client";

@@ -1,6 +1,6 @@
 import { prisma } from "@store/db";
 import { availableStockFor } from "@store/db/orders";
-import type { Category } from "@prisma/client";
+import type { Category } from "@store/db/prisma";
 import type { GridItem } from "@/components/ProductGrid";
 
 export interface ProductImageView {

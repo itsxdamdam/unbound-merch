@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@store/db/prisma";
 import type { WhatsAppDriver } from "../whatsapp/send";
 import { runExpirySweep } from "./expireReservations.job";
 import { processPendingAlerts } from "./processAlerts.job";

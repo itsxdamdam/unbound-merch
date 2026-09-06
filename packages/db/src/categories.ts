@@ -1,4 +1,4 @@
-import type { Category } from "@prisma/client";
+import type { Category } from "./generated/client";
 
 /**
  * Display metadata for the fixed merch lines. The enum is the source of truth

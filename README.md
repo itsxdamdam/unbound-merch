@@ -129,13 +129,31 @@ white at ₦8,500. If that is backwards, swap the two `priceNaira` values in
 
 ### The build
 
-`apps/web`'s build script runs `prisma generate` before `next build`. That is
-not optional: npm 11.11 gates dependency install scripts behind
-`allow-scripts`, so `@prisma/client`'s postinstall does not run on Vercel, and
-without it the generated client is an untyped stub. The failure surfaces as a
-wall of `Parameter 'v' implicitly has an 'any' type` errors that never mention
-Prisma. Generating inside the build also gets the right query-engine binary for
-Vercel's platform, since it runs on the target machine.
+Two things make the Prisma client deterministic here, and both matter:
+
+**The generator writes into the repo, not into `node_modules`.**
+`schema.prisma` sets `output = "../src/generated/client"`, and everything
+imports Prisma through `@store/db/prisma` rather than `@prisma/client`. The
+default output is "wherever `@prisma/client` resolved to", which depends on how
+the installer hoisted the workspace — on a layout that nests a second copy under
+`apps/web/node_modules`, `prisma generate` writes to one copy while the app
+imports the other, still-ungenerated one.
+
+**Generation runs at build time**, via `apps/web/scripts/generate-prisma.mjs`.
+npm 11.11 gates dependency install scripts behind `allow-scripts`, so
+`@prisma/client`'s postinstall does not run on Vercel. Building on the target
+machine also produces the right query-engine binary for its platform. That
+script locates the schema by resolving `@store/db` instead of counting `../`
+segments, so a missing workspace reports itself in one line.
+
+Without both, the failure mode is a wall of
+`Parameter 'v' implicitly has an 'any' type` errors that never mention Prisma —
+because with no generated client there are no types, and every inferred callback
+parameter collapses to `any` under `strict`.
+
+Verified against Vercel's exact conditions: `npm ci --ignore-scripts` (no
+postinstall, no generated client) plus `npm run build` with no `DATABASE_URL`
+set, from a wiped `node_modules`.
 
 Set on Vercel: **Root Directory** `apps/web`, with "Include files outside root
 directory" left on so the workspace resolves.

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@store/db/prisma";
 import { driverFromEnv } from "./whatsapp/send";
 import { startLoop, TICK_MS } from "./jobs/loop";
 import { configFromEnv, effectiveDailyCap } from "./whatsapp/governor";

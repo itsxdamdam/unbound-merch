@@ -5,7 +5,7 @@
  * ADMIN_PASSWORD_HASH is stored as given and never generated here — a seed
  * script that invents a password is a seed script that ships a known one.
  */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../src/generated/client";
 
 import { loadRootEnv } from "../src/env";
 

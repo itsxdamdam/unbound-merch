@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@store/db/prisma";
 import { expireReservations } from "@store/db/orders";
 
 export async function runExpirySweep(prisma: PrismaClient): Promise<void> {

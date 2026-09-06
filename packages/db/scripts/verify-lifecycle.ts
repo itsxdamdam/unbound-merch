@@ -10,7 +10,7 @@
  *
  * It creates orders and then cleans up after itself, restoring stock.
  */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../src/generated/client";
 import { createOrder } from "../src/orders/createOrder";
 import { confirmPayment } from "../src/orders/confirmPayment";
 import { expireReservations } from "../src/orders/expireReservations";
