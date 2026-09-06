@@ -1,5 +1,10 @@
 import { PrismaClient, type Category } from "@prisma/client";
 
+import { loadRootEnv } from "../src/env";
+
+// The .env lives at the repo root; these scripts may be run from anywhere.
+loadRootEnv();
+
 const prisma = new PrismaClient();
 
 /** Naira -> kobo. Prices are quoted in whole Naira; storage is integer kobo. */

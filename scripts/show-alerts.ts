@@ -1,7 +1,11 @@
 /** What the review queue holds right now, as a table. `npm run alerts` */
-import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { formatKobo } from "../packages/db/src/money";
+
+import { loadRootEnv } from "../packages/db/src/env";
+
+// The .env lives at the repo root; these scripts may be run from anywhere.
+loadRootEnv();
 
 const prisma = new PrismaClient();
 

@@ -18,6 +18,11 @@ import { availableStock } from "../src/orders/availableStock";
 import { InsufficientStockError, PaymentConfirmationError } from "../src/orders/errors";
 import { formatKobo } from "../src/money";
 
+import { loadRootEnv } from "../src/env";
+
+// The .env lives at the repo root; these scripts may be run from anywhere.
+loadRootEnv();
+
 const prisma = new PrismaClient();
 
 let passed = 0;

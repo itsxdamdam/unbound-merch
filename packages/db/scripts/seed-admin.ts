@@ -5,8 +5,12 @@
  * ADMIN_PASSWORD_HASH is stored as given and never generated here — a seed
  * script that invents a password is a seed script that ships a known one.
  */
-import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
+
+import { loadRootEnv } from "../src/env";
+
+// The .env lives at the repo root; these scripts may be run from anywhere.
+loadRootEnv();
 
 const prisma = new PrismaClient();
 

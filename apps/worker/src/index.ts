@@ -1,8 +1,12 @@
-import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { driverFromEnv } from "./whatsapp/send";
 import { startLoop, TICK_MS } from "./jobs/loop";
 import { configFromEnv, effectiveDailyCap } from "./whatsapp/governor";
+
+import { loadRootEnv } from "@store/db/env";
+
+// The .env lives at the repo root; these scripts may be run from anywhere.
+loadRootEnv();
 
 /**
  * Worker entrypoint. Long-running, not serverless: it holds an IMAP IDLE

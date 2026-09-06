@@ -12,11 +12,15 @@
  * does. Verification, parsing and matching are left to the worker, so what
  * this exercises is the real pipeline rather than a parallel one.
  */
-import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { createOrder } from "../packages/db/src/orders/createOrder";
 import { formatKobo } from "../packages/db/src/money";
 import { FIXTURES } from "../apps/web/src/lib/alertFixtures";
+
+import { loadRootEnv } from "../packages/db/src/env";
+
+// The .env lives at the repo root; these scripts may be run from anywhere.
+loadRootEnv();
 
 const prisma = new PrismaClient();
 

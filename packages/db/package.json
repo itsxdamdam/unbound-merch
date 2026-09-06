@@ -10,7 +10,8 @@
     "./money": "./src/money.ts",
     "./reference": "./src/reference.ts",
     "./categories": "./src/categories.ts",
-    "./orders": "./src/orders/index.ts"
+    "./orders": "./src/orders/index.ts",
+    "./env": "./src/env.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.1"

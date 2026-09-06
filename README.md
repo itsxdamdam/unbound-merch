@@ -124,6 +124,57 @@ white at ₦8,500. If that is backwards, swap the two `priceNaira` values in
   confirmation that the alert mailbox receives mail directly rather than by
   forwarding (forwarding breaks DKIM and sends everything to manual review).
 
+
+## Deploying
+
+### The build
+
+`apps/web`'s build script runs `prisma generate` before `next build`. That is
+not optional: npm 11.11 gates dependency install scripts behind
+`allow-scripts`, so `@prisma/client`'s postinstall does not run on Vercel, and
+without it the generated client is an untyped stub. The failure surfaces as a
+wall of `Parameter 'v' implicitly has an 'any' type` errors that never mention
+Prisma. Generating inside the build also gets the right query-engine binary for
+Vercel's platform, since it runs on the target machine.
+
+Set on Vercel: **Root Directory** `apps/web`, with "Include files outside root
+directory" left on so the workspace resolves.
+
+### What Vercel cannot host
+
+**The worker is a long-running process** — a 60-second tick loop, an IMAP IDLE
+connection, and a WhatsApp session. None of that survives a serverless function
+boundary. Deploy the storefront to Vercel and the worker somewhere that runs a
+persistent process (Railway, Fly, Render, a VPS).
+
+This matters more than it sounds. With the storefront up and no worker:
+
+- no order is ever confirmed — alerts pile up as `pending`
+- no reservation ever expires — sold-out stock never returns
+- no buyer is ever messaged
+
+The shop would take money and go silent. A storefront without its worker is
+worse than no storefront.
+
+### Environment
+
+`.env` is gitignored, so every variable in `.env.example` must be set in the
+Vercel project (and again wherever the worker runs). At minimum the web app
+needs `DATABASE_URL`, the three `SELLER_*` values, and `DISPLAY_TIMEZONE`.
+
+`DATABASE_URL` must point at a hosted Postgres — Neon, Supabase, Vercel
+Postgres. The local value is a Docker container on `localhost` and will fail in
+production. Run `prisma migrate deploy` against it once before first use.
+
+### Not ready for a public URL
+
+**`/admin` has no authentication.** There is no middleware and no session check
+anywhere in `apps/web/src`. On localhost that is fine. On a public deployment,
+anyone who visits `/admin` can mark any order paid. `ADMIN_PASSWORD_HASH` and
+`ADMIN_SESSION_SECRET` exist in `.env.example` for the login that has not been
+built yet. Put auth in front of `/admin` before the first deploy that has a real
+bank account behind it.
+
 ## Notes
 
 - `next dev`/`next build` run under **Turbopack**. On Node 25, webpack's cache

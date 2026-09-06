@@ -1,4 +1,9 @@
 import { PrismaClient } from "@prisma/client";
+import { loadRootEnv } from "./env";
+
+// Must run before the client is constructed: Prisma resolves env("DATABASE_URL")
+// at construction time, not on first query.
+loadRootEnv();
 
 /**
  * PrismaClient singleton.
