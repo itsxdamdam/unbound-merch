@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@store/db";
-import { formatKobo } from "@store/db/money";
-import { normalizeReference } from "@store/db/reference";
+import { formatKobo, multiplyKobo } from "@/lib/money";
+import { getOrder } from "@/lib/api";
+import { isApiConfigured } from "@/lib/api";
 import { OrderLive } from "@/components/OrderLive";
+import { PayButton } from "@/components/PayButton";
 
 export const dynamic = "force-dynamic";
 
@@ -12,84 +13,88 @@ export default async function OrderPage({
   params: Promise<{ reference: string }>;
 }) {
   const { reference } = await params;
-  const code = normalizeReference(decodeURIComponent(reference));
-  if (!code) notFound();
 
-  const order = await prisma.order.findUnique({
-    where: { referenceCode: code },
-    include: { items: true },
-  });
+  // Orders live entirely on the backend — there is no local store to fall back
+  // to, so this page is honest about needing one rather than inventing data.
+  if (!isApiConfigured()) {
+    return (
+      <>
+        <h1>Order {decodeURIComponent(reference)}</h1>
+        <div className="notice notice-warn">
+          <strong>No backend configured.</strong> Set <code>NEXT_PUBLIC_API_URL</code> to
+          look orders up. The catalogue renders from placeholder data, but orders
+          cannot.
+        </div>
+      </>
+    );
+  }
+
+  const order = await getOrder(decodeURIComponent(reference));
   if (!order) notFound();
-
-  const bank = {
-    name: process.env.SELLER_BANK_NAME ?? "—",
-    accountNumber: process.env.SELLER_ACCOUNT_NUMBER ?? "—",
-    accountName: process.env.SELLER_ACCOUNT_NAME ?? "—",
-  };
 
   return (
     <>
       <h1>Order {order.referenceCode}</h1>
       <p className="lede">
-        Transfer the exact amount, and put the reference in the narration.
+        {order.status === "pending_payment"
+          ? "Your items are held until you complete payment."
+          : "Thanks for your order."}
       </p>
 
       <OrderLive
-        expiresAt={order.expiresAt.toISOString()}
+        expiresAt={order.expiresAt}
         status={order.status}
         reference={order.referenceCode}
       />
 
       <div className="cols" style={{ marginTop: 22 }}>
         <div className="panel stack">
-          <h2>Transfer to</h2>
+          <h2>Payment</h2>
           <div className="row-split">
-            <span className="muted">Bank</span>
-            <strong>{bank.name}</strong>
-          </div>
-          <div className="row-split">
-            <span className="muted">Account number</span>
-            <strong className="mono" style={{ fontSize: 18, letterSpacing: ".05em" }}>
-              {bank.accountNumber}
-            </strong>
-          </div>
-          <div className="row-split">
-            <span className="muted">Account name</span>
-            <strong>{bank.accountName}</strong>
-          </div>
-          <hr className="divider" />
-          <div className="row-split">
-            <span className="muted">Amount — exactly</span>
+            <span className="muted">Amount</span>
             <strong style={{ fontSize: 22 }}>{formatKobo(order.totalKobo)}</strong>
           </div>
-          <div>
-            <span className="muted">Narration / remark</span>
-            <div className="ref" style={{ marginTop: 4 }}>{order.referenceCode}</div>
+          <div className="row-split">
+            <span className="muted">Reference</span>
+            <span className="mono">{order.referenceCode}</span>
           </div>
 
-          {/* Both of these are how the alert gets matched automatically. A
-              buyer who skips them still gets their goods, but only after the
-              seller matches it by hand. */}
-          <div className="notice notice-info">
-            Send the <strong>exact amount</strong> and include{" "}
-            <strong>{order.referenceCode}</strong> in the narration. That&rsquo;s what
-            confirms your order automatically. A different amount, or a missing
-            reference, means we have to check it manually first.
-          </div>
+          {order.status === "pending_payment" && (
+            <>
+              <hr className="divider" />
+              {/* For a buyer who closed the Paystack tab and came back. The
+                  hold is still theirs until it expires. */}
+              <PayButton referenceCode={order.referenceCode} />
+              <p className="hint" style={{ margin: 0 }}>
+                You pay on Paystack&rsquo;s secure page — card, bank transfer or USSD.
+                We never see your card details.
+              </p>
+            </>
+          )}
+
+          {order.status === "paid" && (
+            <>
+              <hr className="divider" />
+              <p className="muted" style={{ margin: 0 }}>
+                Paid. We&rsquo;ve sent a WhatsApp message to {order.buyerPhone} asking
+                where to deliver it.
+              </p>
+            </>
+          )}
         </div>
 
         <div className="panel stack">
           <h2>Your order</h2>
-          {order.items.map((item) => (
-            <div className="row-split" key={item.id}>
+          {order.items.map((item, index) => (
+            <div className="row-split" key={`${item.name}-${item.variantLabel}-${index}`}>
               <span>
-                {item.nameSnapshot}{" "}
+                {item.name}{" "}
                 <span className="muted">
-                  {item.variantLabelSnapshot} × {item.quantity}
+                  {item.variantLabel} × {item.quantity}
                 </span>
               </span>
               <span className="mono">
-                {formatKobo(item.unitPriceKobo * BigInt(item.quantity))}
+                {formatKobo(multiplyKobo(item.unitPriceKobo, item.quantity))}
               </span>
             </div>
           ))}
@@ -107,12 +112,10 @@ export default async function OrderPage({
             <span className="muted">WhatsApp</span>
             <span className="mono">{order.buyerPhone}</span>
           </div>
-          {order.deliveryAddress && (
-            <div>
-              <span className="muted">Deliver to</span>
-              <div>{order.deliveryAddress}</div>
-            </div>
-          )}
+          <div className="row-split">
+            <span className="muted">Email</span>
+            <span className="mono">{order.buyerEmail}</span>
+          </div>
         </div>
       </div>
     </>

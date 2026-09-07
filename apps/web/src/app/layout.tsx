@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CATEGORIES } from "@store/db/categories";
 import { CartProvider } from "@/lib/cart";
 import { CartPill } from "@/components/CartPill";
 import "./globals.css";
@@ -20,11 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <header className="site-header">
             <div className="wrap">
               <Link className="brand" href="/">Unbound</Link>
+              {/* Cart only. Categories are reachable from the chips on the
+                  shop pages, and /admin is deliberately unlinked — it is not a
+                  customer destination, and it has no authentication yet. */}
               <nav className="nav">
-                {CATEGORIES.map((c) => (
-                  <Link key={c.slug} href={`/shop/${c.slug}`}>{c.label}</Link>
-                ))}
-                <Link href="/admin">Admin</Link>
                 <CartPill />
               </nav>
             </div>

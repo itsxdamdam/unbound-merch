@@ -1,106 +1,97 @@
-import { prisma } from "@store/db";
-import { availableStockFor } from "@store/db/orders";
-import type { Category } from "@store/db/prisma";
-import type { GridItem } from "@/components/ProductGrid";
+import * as api from "./api";
+import { FIXTURE_PRODUCTS } from "./fixtures";
+import type { CartLine, Product } from "./types";
+import { multiplyKobo, sumKobo } from "./money";
 
-export interface ProductImageView {
-  url: string;
-  alt: string;
-  /** Null for a product-level angle (a tee's front/back). */
-  variantId: string | null;
+/**
+ * Catalogue reads.
+ *
+ * One switch: with NEXT_PUBLIC_API_URL set, everything comes from the backend.
+ * Without it, the placeholder catalogue keeps the storefront developable. There
+ * is no fallback for an API that is merely failing — a backend that is down
+ * should surface as an error, not as quietly stale prices.
+ */
+export function usingFixtures(): boolean {
+  return !api.isApiConfigured();
+}
+
+export async function listProducts(category?: string): Promise<Product[]> {
+  if (usingFixtures()) {
+    return category
+      ? FIXTURE_PRODUCTS.filter((p) => p.category === category)
+      : FIXTURE_PRODUCTS;
+  }
+  return api.listProducts(category);
+}
+
+export async function getProduct(slug: string): Promise<Product | null> {
+  if (usingFixtures()) {
+    return FIXTURE_PRODUCTS.find((p) => p.slug === slug) ?? null;
+  }
+  return api.getProduct(slug);
+}
+
+export interface ResolvedLine extends CartLine {
+  productSlug: string;
+  productName: string;
+  variantLabel: string;
+  unitPriceKobo: string;
+  available: number;
+  image: { url: string; alt: string } | null;
+}
+
+export interface ResolvedCart {
+  lines: ResolvedLine[];
+  /** Display only. The backend recomputes the real total when the order is created. */
+  totalKobo: string;
+  /** Variant ids no longer in the catalogue; the cart drops them. */
+  dropped: string[];
 }
 
 /**
- * Catalogue reads for the storefront. Availability is computed the same way
- * checkout computes it, so the grid never advertises stock that checkout will
- * then refuse.
+ * Turn stored variant ids into displayable lines.
+ *
+ * Done here rather than by a "price this cart" endpoint because the catalogue
+ * already carries prices, and one fewer round trip is one fewer thing for the
+ * backend to implement. It is a preview: `POST /orders` sends ids and
+ * quantities only, and the backend prices it again.
  */
-export async function listProducts(category?: Category): Promise<GridItem[]> {
-  const products = await prisma.product.findMany({
-    where: { active: true, ...(category ? { category } : {}) },
-    include: {
-      variants: { where: { active: true }, orderBy: { sortOrder: "asc" } },
-      images: { orderBy: { sortOrder: "asc" } },
-    },
-    orderBy: { name: "asc" },
-  });
+export async function resolveCart(lines: CartLine[]): Promise<ResolvedCart> {
+  if (lines.length === 0) return { lines: [], totalKobo: "0", dropped: [] };
 
-  const available = await availableStockFor(
-    prisma,
-    products.flatMap((p) => p.variants.map((v) => v.id)),
-  );
+  const products = await listProducts();
+  const resolved: ResolvedLine[] = [];
+  const dropped: string[] = [];
 
-  return products.map((product) => ({
-    slug: product.slug,
-    name: product.name,
-    // [0] is the card image; [1] is what the card flips to on hover — the back
-    // of a tee, or the second colourway of a cap. Both are already in
-    // sortOrder, so the seed decides what a shopper sees first.
-    image: product.images[0]
-      ? { url: product.images[0].url, alt: product.images[0].alt }
-      : null,
-    hoverImage: product.images[1]
-      ? { url: product.images[1].url, alt: product.images[1].alt }
-      : null,
-    fromKobo: product.variants.reduce(
-      (min, v) => (v.priceKobo < min ? v.priceKobo : min),
-      product.variants[0]?.priceKobo ?? product.priceKobo,
-    ),
-    variantLabels: product.variants.map((v) => v.label),
-    available: product.variants.reduce((sum, v) => sum + (available.get(v.id) ?? 0), 0),
-  }));
-}
+  for (const line of lines) {
+    const product = products.find((p) => p.variants.some((v) => v.id === line.variantId));
+    const variant = product?.variants.find((v) => v.id === line.variantId);
+    if (!product || !variant) {
+      dropped.push(line.variantId);
+      continue;
+    }
 
-export async function getProduct(slug: string) {
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      variants: { where: { active: true }, orderBy: { sortOrder: "asc" } },
-      images: { orderBy: { sortOrder: "asc" } },
-    },
-  });
-  if (!product || !product.active) return null;
+    // Prefer the image bound to this exact variant: a line for a purple cap
+    // must not show the black one.
+    const image =
+      product.images.find((i) => i.variantId === variant.id) ??
+      product.images.find((i) => i.variantId === null) ??
+      null;
 
-  const available = await availableStockFor(prisma, product.variants.map((v) => v.id));
+    resolved.push({
+      ...line,
+      productSlug: product.slug,
+      productName: product.name,
+      variantLabel: variant.label,
+      unitPriceKobo: variant.priceKobo,
+      available: variant.available,
+      image: image ? { url: image.url, alt: image.alt } : null,
+    });
+  }
 
   return {
-    ...product,
-    variants: product.variants.map((v) => ({
-      id: v.id,
-      label: v.label,
-      priceKobo: v.priceKobo,
-      available: available.get(v.id) ?? 0,
-    })),
-    images: product.images.map((i) => ({
-      url: i.url,
-      alt: i.alt,
-      variantId: i.variantId,
-    })),
+    lines: resolved,
+    totalKobo: sumKobo(resolved.map((l) => multiplyKobo(l.unitPriceKobo, l.quantity))),
+    dropped,
   };
-}
-
-/**
- * The image to show alongside a line item. Prefers the one bound to the exact
- * variant — a cart line for a purple cap should not show the black one.
- */
-export async function imagesForVariants(
-  variantIds: string[],
-): Promise<Map<string, { url: string; alt: string }>> {
-  const result = new Map<string, { url: string; alt: string }>();
-  if (variantIds.length === 0) return result;
-
-  const variants = await prisma.productVariant.findMany({
-    where: { id: { in: variantIds } },
-    select: {
-      id: true,
-      images: { orderBy: { sortOrder: "asc" }, take: 1 },
-      product: { select: { images: { orderBy: { sortOrder: "asc" }, take: 1 } } },
-    },
-  });
-
-  for (const variant of variants) {
-    const image = variant.images[0] ?? variant.product.images[0];
-    if (image) result.set(variant.id, { url: image.url, alt: image.alt });
-  }
-  return result;
 }

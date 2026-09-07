@@ -3,36 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
-    "db:up": "docker compose up -d",
-    "db:down": "docker compose down",
-    "db:generate": "prisma generate --schema packages/db/prisma/schema.prisma",
-    "db:migrate": "prisma migrate dev --schema packages/db/prisma/schema.prisma",
-    "db:seed": "tsx packages/db/prisma/seed.ts",
-    "db:studio": "prisma studio --schema packages/db/prisma/schema.prisma",
-    "db:reset": "prisma migrate reset --schema packages/db/prisma/schema.prisma",
-    "db:verify": "tsx packages/db/scripts/verify-lifecycle.ts",
-    "db:seed:admin": "tsx packages/db/scripts/seed-admin.ts",
-    "dev:web": "npm run dev --workspace @store/web",
-    "dev:worker": "npm run dev --workspace @store/worker",
-    "typecheck": "tsc --noEmit -p packages/db/tsconfig.json && tsc --noEmit -p apps/worker/tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
-    "setup": "npm run db:up && npm run db:migrate && npm run db:seed && npm run db:seed:admin",
-    "demo": "tsx scripts/demo-order.ts",
-    "alerts": "tsx scripts/show-alerts.ts",
-    "postinstall": "prisma generate --schema packages/db/prisma/schema.prisma",
-    "build": "npm run build --workspace @store/web"
+    "dev": "npm run dev --workspace @store/web",
+    "build": "npm run build --workspace @store/web",
+    "start": "npm run start --workspace @store/web",
+    "typecheck": "npm run typecheck --workspace @store/web"
   },
-  "devDependencies": {
-    "@types/node": "^26.4.1",
-    "prisma": "^6.16.1",
-    "tsx": "^4.20.3",
-    "typescript": "^5.9.2",
-    "dotenv": "^17.2.2"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.16.1"
-  }
+  "devDependencies": {}
 }

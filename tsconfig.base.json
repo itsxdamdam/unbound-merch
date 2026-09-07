@@ -13,9 +13,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "types": [
-      "node"
-    ]
+    "noEmit": true
   }
 }

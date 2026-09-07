@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CATEGORIES, categoryFromSlug } from "@store/db/categories";
+import { CATEGORIES, categoryFromSlug } from "@/lib/categories";
 import { ProductGrid } from "@/components/ProductGrid";
 import { listProducts } from "@/lib/catalog";
 
@@ -17,12 +17,12 @@ export default async function CategoryPage({
   const meta = categoryFromSlug(category);
   if (!meta) notFound();
 
-  const items = await listProducts(meta.key);
+  const items = await listProducts(meta.slug);
 
   return (
     <>
       <h1>{meta.label}</h1>
-      <p className="lede">Pay by bank transfer. Your order is held for 15 minutes.</p>
+      <p className="lede">Pay with Paystack. Your order is held for 15 minutes.</p>
       <div className="chips">
         <Link className="chip" href="/">All</Link>
         {CATEGORIES.map((c) => (

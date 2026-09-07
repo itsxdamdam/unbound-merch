@@ -1,9 +1,4 @@
 node_modules/
 .env
 .next/
-dist/
-.wwebjs_auth/
 *.tsbuildinfo
-
-# Prisma client is generated at install and build time.
-packages/db/src/generated/

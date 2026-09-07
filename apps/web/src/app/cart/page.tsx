@@ -3,9 +3,9 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { formatKobo } from "@store/db/money";
+import { formatKobo, multiplyKobo } from "@/lib/money";
 import { useCart } from "@/lib/cart";
-import { resolveCart, type ResolvedCart } from "../actions";
+import { resolveCart, type ResolvedCart } from "@/lib/catalog";
 
 export default function CartPage() {
   const { lines, ready, setQuantity, remove } = useCart();
@@ -71,7 +71,7 @@ export default function CartPage() {
                             {line.productName}
                           </Link>
                           <div className="muted" style={{ fontSize: 12 }}>
-                            {line.label}
+                            {line.variantLabel}
                             {line.quantity > line.available && (
                               <span style={{ color: "var(--danger)" }}>
                                 {" "}· only {line.available} left
@@ -81,7 +81,7 @@ export default function CartPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="num">{formatKobo(BigInt(line.unitPriceKobo))}</td>
+                    <td className="num">{formatKobo(line.unitPriceKobo)}</td>
                     <td className="num">
                       <input
                         type="number" min={1} max={Math.max(1, line.available)}
@@ -90,7 +90,7 @@ export default function CartPage() {
                       />
                     </td>
                     <td className="num">
-                      {formatKobo(BigInt(line.unitPriceKobo) * BigInt(line.quantity))}
+                      {formatKobo(multiplyKobo(line.unitPriceKobo, line.quantity))}
                     </td>
                     <td className="num">
                       <button className="btn-link" onClick={() => remove(line.variantId)}>
@@ -107,7 +107,7 @@ export default function CartPage() {
         <div className="panel stack">
           <div className="row-split">
             <span>Subtotal</span>
-            <strong style={{ fontSize: 20 }}>{formatKobo(BigInt(cart.totalKobo))}</strong>
+            <strong style={{ fontSize: 20 }}>{formatKobo(cart.totalKobo)}</strong>
           </div>
           <p className="hint" style={{ margin: 0 }}>
             Delivery is arranged over WhatsApp after payment.

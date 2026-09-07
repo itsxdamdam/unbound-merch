@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { formatKobo } from "@store/db/money";
+import { formatKobo, multiplyKobo } from "@/lib/money";
 import { useCart } from "@/lib/cart";
-import { checkoutAction, resolveCart, type ResolvedCart } from "../actions";
+import { resolveCart, type ResolvedCart } from "@/lib/catalog";
+import { createOrder } from "@/lib/api";
 
 export default function CheckoutPage() {
   const { lines, ready } = useCart();
@@ -35,12 +36,22 @@ export default function CheckoutPage() {
       // On success this redirects and never returns; the cart is deliberately
       // NOT cleared here — the order page clears it once the order exists, so
       // a failed checkout doesn't lose the buyer's basket.
-      const result = await checkoutAction(lines, {
-        name: String(formData.get("name") ?? ""),
-        phone: String(formData.get("phone") ?? ""),
-        address: String(formData.get("address") ?? ""),
-      });
-      if (result?.error) setError(result.error);
+      try {
+        // Ids and quantities only. The backend prices the order and starts the
+        // Paystack transaction; nothing here decides what anyone is charged.
+        const { authorizationUrl } = await createOrder({
+          items: lines,
+          buyerName: String(formData.get("name") ?? ""),
+          buyerPhone: String(formData.get("phone") ?? ""),
+          buyerEmail: String(formData.get("email") ?? ""),
+        });
+        // Full navigation, not a router push: Paystack is another origin.
+        window.location.href = authorizationUrl;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Something went wrong. Please try again.",
+        );
+      }
     });
   }
 
@@ -48,7 +59,7 @@ export default function CheckoutPage() {
     <>
       <h1>Checkout</h1>
       <p className="lede">
-        We&rsquo;ll hold your items for 15 minutes while you transfer.
+        We&rsquo;ll hold your items for 15 minutes while you pay.
       </p>
 
       <div className="cols">
@@ -64,21 +75,25 @@ export default function CheckoutPage() {
               autoComplete="tel" placeholder="08012345678"
             />
             <p className="hint">
-              We message this number when your payment lands. Nigerian numbers only.
+              We confirm your payment here and arrange delivery on WhatsApp.
+              Nigerian numbers only.
             </p>
           </div>
           <div>
-            <label htmlFor="address">Delivery address</label>
-            <textarea id="address" name="address" required rows={3} autoComplete="street-address" />
+            <label htmlFor="email">Email</label>
+            <input
+              id="email" name="email" required type="email"
+              autoComplete="email" placeholder="you@example.com"
+            />
+            <p className="hint">Paystack sends your payment receipt here.</p>
           </div>
-
           {error && <div className="notice notice-error">{error}</div>}
 
           <button className="btn" type="submit" disabled={pending}>
-            {pending ? "Creating your order…" : "Place order"}
+            {pending ? "Taking you to Paystack…" : "Pay with Paystack"}
           </button>
           <p className="hint" style={{ margin: 0 }}>
-            No payment is taken here. The next page shows the account to transfer to.
+            You&rsquo;ll pay on Paystack&rsquo;s secure page. We never see your card details.
           </p>
         </form>
 
@@ -89,18 +104,18 @@ export default function CheckoutPage() {
               <span>
                 {line.productName}{" "}
                 <span className="muted">
-                  {line.label} × {line.quantity}
+                  {line.variantLabel} × {line.quantity}
                 </span>
               </span>
               <span className="mono">
-                {formatKobo(BigInt(line.unitPriceKobo) * BigInt(line.quantity))}
+                {formatKobo(multiplyKobo(line.unitPriceKobo, line.quantity))}
               </span>
             </div>
           ))}
           <hr className="divider" />
           <div className="row-split">
             <strong>Total</strong>
-            <strong style={{ fontSize: 20 }}>{formatKobo(BigInt(cart.totalKobo))}</strong>
+            <strong style={{ fontSize: 20 }}>{formatKobo(cart.totalKobo)}</strong>
           </div>
         </div>
       </div>

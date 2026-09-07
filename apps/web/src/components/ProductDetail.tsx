@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { formatKobo } from "@store/db/money";
+import { formatKobo } from "@/lib/money";
 import { useCart } from "@/lib/cart";
 
 export interface DetailImage {
@@ -15,7 +15,7 @@ export interface DetailImage {
 export interface DetailVariant {
   id: string;
   label: string;
-  /** Serialized: bigint cannot cross the server/client boundary. */
+  /** Kobo, as a string. See lib/types.ts. */
   priceKobo: string;
   available: number;
 }
@@ -141,7 +141,7 @@ export function ProductDetail({
 
         <div className="row-split">
           <strong style={{ fontSize: 22 }}>
-            {selected ? formatKobo(BigInt(selected.priceKobo)) : "—"}
+            {selected ? formatKobo(selected.priceKobo) : "—"}
           </strong>
           <span className="muted">
             {soldOut ? "Sold out" : `${selected.available} available`}
