@@ -7,7 +7,7 @@ text, so the storefront shows them with no code change.
     ├─ tshirts/
     │  ├─ tshirt-black-front-godacity.png          Godacity Tee — Black   ₦9,000
     │  ├─ tshirt-black-back-the-godacious-ones.png   (back)
-    │  ├─ tshirt-white-front.png                   Godacity Tee — White   ₦8,500
+    │  ├─ tshirt-white-front.png                   Godacity Tee — White   ₦9,500
     │  └─ tshirt-white-back-gods-in-the-city.png     (back)
     ├─ jerseys/
     │  ├─ jersey-front.png                         Godacity Jersey        ₦17,000

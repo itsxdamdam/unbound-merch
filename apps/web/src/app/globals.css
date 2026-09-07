@@ -1,35 +1,137 @@
 :root {
+  color-scheme: light;
+
   --bg: #fbfaf8;
   --surface: #ffffff;
   --border: #e6e2dc;
+  --border-strong: #cfc8c0;
   --ink: #1b1917;
   --muted: #6f6862;
   --accent: #1c6b4a;
   --accent-ink: #ffffff;
   --danger: #a8321f;
+
   --warn-bg: #fdf6e3;
   --warn-border: #e8d9a8;
-  /* Brand purple, taken from the jersey and cap artwork so the logo, the
-     artwork and the UI all read as one thing. */
+  --error-bg: #fdeee9;
+  --error-border: #f2c9bc;
+  --error-ink: #8e2a16;
+  --ok-bg: #e7f3ec;
+  --ok-border: #b8ddc7;
+
+  /* Translucent so the backdrop reads through. */
+  --header-bg: rgba(255, 255, 255, 0.86);
+  --panel-bg: rgba(255, 255, 255, 0.93);
+  --field-bg: #ffffff;
+  --shadow: 0 6px 20px rgba(27, 25, 23, .09);
+
+  /* The scrim over the backdrop artwork. */
+  --scrim-top: rgba(251, 250, 248, 0.72);
+  --scrim-mid: rgba(251, 250, 248, 0.88);
+  --scrim-bottom: rgba(251, 250, 248, 0.95);
+  --backdrop-opacity: 0.5;
+
+  /* Light in BOTH themes: the artwork is black cut-outs on transparency and
+     would vanish on a dark plate. */
+  --plate: #ffffff;
+  --plate-empty: #b3aaa1;
+
   --brand: #5b2be8;
+  --brand-ink: #ffffff;
+
   --radius: 10px;
   --maxw: 1080px;
-  /* Horizontal page padding, in one place so the header, the content and any
-     future full-bleed section stay on the same edge. */
   --gutter: 20px;
+}
+
+/* Dark palette, declared twice: once for the system preference, once for an
+   explicit toggle. The :not([data-theme="light"]) guard lets someone force
+   light while their OS is dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #000000;
+    --surface: #0e0e10;
+    --border: #26262b;
+    --border-strong: #3d3d45;
+    --ink: #f1efec;
+    --muted: #a39d97;
+    --accent: #3ba97a;
+    --accent-ink: #06140d;
+    --danger: #ff8f77;
+
+    --warn-bg: #2a2413;
+    --warn-border: #4b4020;
+    --error-bg: #33191a;
+    --error-border: #5c2b2b;
+    --error-ink: #ffb4a3;
+    --ok-bg: #13291f;
+    --ok-border: #27503b;
+
+    --header-bg: rgba(0, 0, 0, 0.72);
+    --panel-bg: rgba(14, 14, 16, 0.88);
+    --field-bg: #08080a;
+    --shadow: 0 6px 20px rgba(0, 0, 0, .45);
+
+    --scrim-top: rgba(0, 0, 0, 0.48);
+    --scrim-mid: rgba(0, 0, 0, 0.64);
+    --scrim-bottom: rgba(0, 0, 0, 0.78);
+    /* Forward on black; the scrim still has to keep text legible. */
+    --backdrop-opacity: 0.62;
+
+    /* Brighter purple: #5b2be8 is too dark to read against #121114. */
+    --brand: #8f74ff;
+    --brand-ink: #17122b;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #000000;
+  --surface: #0e0e10;
+  --border: #26262b;
+  --border-strong: #3d3d45;
+  --ink: #f1efec;
+  --muted: #a39d97;
+  --accent: #3ba97a;
+  --accent-ink: #06140d;
+  --danger: #ff8f77;
+
+  --warn-bg: #2a2413;
+  --warn-border: #4b4020;
+  --error-bg: #33191a;
+  --error-border: #5c2b2b;
+  --error-ink: #ffb4a3;
+  --ok-bg: #13291f;
+  --ok-border: #27503b;
+
+  --header-bg: rgba(0, 0, 0, 0.72);
+  --panel-bg: rgba(14, 14, 16, 0.88);
+  --field-bg: #08080a;
+  --shadow: 0 6px 20px rgba(0, 0, 0, .45);
+
+  --scrim-top: rgba(0, 0, 0, 0.48);
+  --scrim-mid: rgba(0, 0, 0, 0.64);
+  --scrim-bottom: rgba(0, 0, 0, 0.78);
+  --backdrop-opacity: 0.62;
+
+  --brand: #8f74ff;
+  --brand-ink: #17122b;
 }
 
 * { box-sizing: border-box; }
 
-/* Grid/flex children default to `min-width: auto` and refuse to shrink below
-   their content, which is the usual cause of horizontal overflow. */
+/* Grid/flex children default to min-width:auto and refuse to shrink below
+   their content — the usual cause of horizontal overflow. */
 .cols > *,
 .stack > *,
 .row-split > *,
 .card-body,
 .cart-item-main { min-width: 0; }
 
-body { overflow-wrap: anywhere; }
+body { overflow-wrap: break-word; }
 /* Except where breaking mid-token would be wrong. */
 .mono, .card-price, .cart-item-total { overflow-wrap: normal; }
 .mono { word-break: break-all; }
@@ -45,8 +147,7 @@ body {
 
 a { color: inherit; }
 
-/* `max(...)` with the safe-area insets so a notched phone in landscape does not
-   tuck content under the sensor housing or the rounded corner. */
+/* max() with safe-area insets, for notched phones in landscape. */
 .wrap {
   max-width: var(--maxw);
   margin: 0 auto;
@@ -55,9 +156,8 @@ a { color: inherit; }
   position: relative;
 }
 
-/* ---- cityscape backdrop ----
-   Fixed, heavily faded, with a scrim over it so text stays readable. A 174KB
-   derivative of the 1.3MB scarf PNG — it loads on every view. */
+/* Fixed, with a scrim so text stays readable. A 174KB derivative of the
+   1.3MB scarf PNG — it loads on every view. */
 .backdrop {
   position: fixed;
   inset: 0;
@@ -65,7 +165,7 @@ a { color: inherit; }
   background-image: url("/bg-cityscape.jpg");
   background-size: cover;
   background-position: center;
-  opacity: 0.5;
+  opacity: var(--backdrop-opacity);
   pointer-events: none;
 }
 .backdrop::after {
@@ -76,9 +176,9 @@ a { color: inherit; }
      down where the tables and forms live. */
   background: linear-gradient(
     180deg,
-    rgba(251, 250, 248, 0.72) 0%,
-    rgba(251, 250, 248, 0.88) 38%,
-    rgba(251, 250, 248, 0.95) 100%
+    var(--scrim-top) 0%,
+    var(--scrim-mid) 38%,
+    var(--scrim-bottom) 100%
   );
 }
 
@@ -89,15 +189,14 @@ a { color: inherit; }
 /* ---- header ---- */
 .site-header {
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.86);
+  background: var(--header-bg);
   backdrop-filter: saturate(140%) blur(10px);
   position: sticky; top: 0; z-index: 20;
 }
 .site-header .wrap {
   display: flex; align-items: center; gap: 24px; height: 60px;
 }
-/* A mask, not an overlay: the PNG's alpha defines the shape and --brand fills
-   it. Overlaying would tint the transparent background too. */
+/* A mask, not an overlay: --brand fills the PNG's alpha. */
 .brand { display: flex; align-items: center; text-decoration: none; flex: 0 0 auto; }
 .brand-logo {
   display: block;
@@ -123,13 +222,22 @@ a { color: inherit; }
 }
 .cart-link:hover { color: var(--brand); }
 
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 0; cursor: pointer;
+  color: var(--ink); padding: 11px;
+  border-radius: 999px;
+  transition: color .12s ease;
+}
+.theme-toggle:hover { color: var(--brand); }
+
 .cart-count {
   position: absolute;
   top: 2px; right: 2px;
   min-width: 17px; height: 17px;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--brand); color: #fff;
+  background: var(--brand); color: var(--brand-ink);
   font-size: 11px; font-weight: 650; line-height: 17px;
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -139,8 +247,8 @@ a { color: inherit; }
 h1 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; }
 h2 { font-size: 18px; letter-spacing: -0.01em; margin: 0 0 12px; }
 .lede { color: var(--muted); margin: 0 0 26px; }
-/* Vertical only — `<main>` is both .wrap and .page, and a `padding` shorthand
-   here would reset .wrap's gutter to zero. */
+/* Vertical only: <main> is both .wrap and .page, and a padding shorthand
+   would reset .wrap's gutter to zero. */
 .page { padding-top: 32px; padding-bottom: 64px; }
 
 /* ---- category chips ---- */
@@ -152,8 +260,8 @@ h2 { font-size: 18px; letter-spacing: -0.01em; margin: 0 0 12px; }
   color: var(--muted);
   transition: border-color .12s ease, color .12s ease;
 }
-.chip:hover { border-color: #cfc8c0; color: var(--ink); }
-.chip[data-active="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.chip:hover { border-color: var(--border-strong); color: var(--ink); }
+.chip[data-active="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 
 /* ---- product grid ---- */
 .grid {
@@ -168,20 +276,20 @@ h2 { font-size: 18px; letter-spacing: -0.01em; margin: 0 0 12px; }
   transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
 }
 .card:hover {
-  border-color: #cfc8c0;
-  box-shadow: 0 6px 20px rgba(27, 25, 23, .09);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow);
   transform: translateY(-2px);
 }
 
 .thumb {
   position: relative;
   aspect-ratio: 1;
-  background: #fff;
+  background: var(--plate);
   display: grid; place-items: center;
   overflow: hidden;
 }
 .thumb-empty {
-  color: #b3aaa1; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--plate-empty); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
 }
 
 /* contain, not cover: cropping a tee to a square cuts the print off. */
@@ -197,7 +305,7 @@ h2 { font-size: 18px; letter-spacing: -0.01em; margin: 0 0 12px; }
 .card:focus-visible .thumb-img-hover { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  .thumb-img-hover { transition: none; }
+  .thumb-img-hover, .gallery-img { transition: none; }
   .card { transition: none; }
   .card:hover { transform: none; }
 }
@@ -208,7 +316,7 @@ h2 { font-size: 18px; letter-spacing: -0.01em; margin: 0 0 12px; }
 
 /* ---- panels / forms ---- */
 .panel {
-  background: rgba(255, 255, 255, 0.93);
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius); padding: 20px;
 }
@@ -216,7 +324,7 @@ h2 { font-size: 18px; letter-spacing: -0.01em; margin: 0 0 12px; }
 label { display: block; font-size: 13px; font-weight: 550; margin-bottom: 5px; }
 input, textarea, select {
   width: 100%; font: inherit; padding: 9px 11px;
-  border: 1px solid var(--border); border-radius: 8px; background: #fff; color: inherit;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--field-bg); color: inherit;
 }
 input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
@@ -234,7 +342,8 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
 /* ---- notices ---- */
 .notice { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
 .notice-warn { background: var(--warn-bg); border-color: var(--warn-border); }
-.notice-error { background: #fdeee9; border-color: #f2c9bc; color: #8e2a16; }
+.notice-error { background: var(--error-bg); border-color: var(--error-border); color: var(--error-ink); }
+.notice-ok { background: var(--ok-bg); border-color: var(--ok-border); }
 
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .muted { color: var(--muted); }
@@ -258,37 +367,46 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
 .gallery-main {
   position: relative;
   aspect-ratio: 1;
-  background: #fff;
+  background: var(--plate);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
   display: grid; place-items: center;
   padding: 4%;
+  background: var(--plate);
 }
+/* All images stacked, only the active one opaque — crossfade instead of a
+   src swap, so there is no flash while the next file decodes. */
+.gallery-img {
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.gallery-img[data-active="true"] { opacity: 1; }
+
 .gallery-strip { display: flex; gap: 8px; flex-wrap: wrap; }
 .gallery-thumb {
   position: relative;
   width: 72px; height: 72px;
   border: 1px solid var(--border); border-radius: 8px;
-  background: #fff; padding: 4px; cursor: pointer;
+  background: var(--plate); padding: 4px; cursor: pointer;
   overflow: hidden;
   transition: border-color .12s ease;
 }
 .gallery-thumb img { object-fit: contain; }
 .gallery-thumb[data-active="true"] { border-color: var(--ink); border-width: 2px; }
-.gallery-thumb:hover { border-color: #cfc8c0; }
+.gallery-thumb:hover { border-color: var(--border-strong); }
 
 /* ---- variant swatches ---- */
 .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
 .swatch {
   font: inherit; font-size: 13px; cursor: pointer;
   padding: 8px 14px; border-radius: 8px;
-  border: 1px solid var(--border); background: #fff; color: var(--ink);
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink);
   transition: border-color .12s ease, background .12s ease;
 }
-.swatch:hover:not(:disabled) { border-color: #b3aaa1; }
+.swatch:hover:not(:disabled) { border-color: var(--border-strong); }
 .swatch[data-active="true"] {
-  border-color: var(--ink); background: var(--ink); color: #fff;
+  border-color: var(--ink); background: var(--ink); color: var(--bg);
 }
 .swatch:disabled {
   opacity: .45; cursor: not-allowed; text-decoration: line-through;
@@ -310,25 +428,43 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
 .cart-thumb {
   position: relative; width: 56px; height: 56px;
   border: 1px solid var(--border); border-radius: 8px;
-  background: #fff; overflow: hidden;
+  background: var(--plate); overflow: hidden;
 }
 .cart-thumb img { object-fit: contain; padding: 4px; }
 
 .cart-item-name { font-weight: 550; text-decoration: none; }
-.cart-item-controls { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
-.cart-item-controls input { width: 64px; padding: 6px 8px; }
+.cart-item-controls {
+  display: flex; align-items: center; gap: 14px; margin-top: 10px;
+  /* Wrap the row rather than squeeze its contents. */
+  flex-wrap: wrap;
+}
+.cart-item-controls .btn-link { white-space: nowrap; }
+
+.qty {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--field-bg);
+  overflow: hidden;
+}
+.qty button {
+  font: inherit; font-size: 17px; line-height: 1;
+  /* 40px square: a comfortable thumb target without dwarfing the row. */
+  width: 40px; height: 40px;
+  border: 0; background: none; color: var(--ink);
+  cursor: pointer;
+}
+.qty button:hover:not(:disabled) { background: var(--bg); color: var(--brand); }
+.qty button:disabled { opacity: .35; cursor: not-allowed; }
+.qty-value {
+  min-width: 28px; text-align: center;
+  font-variant-numeric: tabular-nums;
+  border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+  align-self: stretch; display: grid; place-items: center;
+}
 .cart-item-total { white-space: nowrap; font-variant-numeric: tabular-nums; }
 
-/* Screen-reader-only. */
-.visually-hidden {
-  position: absolute; width: 1px; height: 1px;
-  margin: -1px; padding: 0; border: 0;
-  clip-path: inset(50%); overflow: hidden; white-space: nowrap;
-}
 
-/* ---- mobile ----
-   Wider gutters than desktop, and the bottom inset keeps the last row clear of
-   the home indicator. */
+/* ---- mobile ---- */
 @media (max-width: 640px) {
   :root { --gutter: 28px; }
 

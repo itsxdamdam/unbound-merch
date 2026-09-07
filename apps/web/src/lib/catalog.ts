@@ -1,8 +1,6 @@
 import { PRODUCTS } from "./products";
 import type { CartLine, Product } from "./types";
 
-// Local and synchronous underneath; `async` so pages need not change shape if
-// products ever move behind a request.
 export async function listProducts(category?: string): Promise<Product[]> {
   return category ? PRODUCTS.filter((p) => p.category === category) : PRODUCTS;
 }
@@ -28,11 +26,8 @@ export interface ResolvedCart {
   dropped: string[];
 }
 
-/**
- * Stored variant ids -> displayable lines. `dropped` carries ids no longer in
- * the catalogue: carts outlive deploys, and those get removed rather than
- * failing checkout.
- */
+// Stored variant ids -> displayable lines. `dropped` carries ids no longer in
+// the catalogue, since carts outlive deploys.
 export async function resolveCart(lines: CartLine[]): Promise<ResolvedCart> {
   if (lines.length === 0) return { lines: [], total: 0, dropped: [] };
 

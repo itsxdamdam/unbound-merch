@@ -63,15 +63,27 @@ export default function CartPage() {
                   </div>
 
                   <div className="cart-item-controls">
-                    <label className="visually-hidden" htmlFor={`qty-${line.variantId}`}>
-                      Quantity for {line.productName}
-                    </label>
-                    <input
-                      id={`qty-${line.variantId}`}
-                      type="number" min={1} max={99}
-                      value={line.quantity}
-                      onChange={(e) => setQuantity(line.variantId, Number(e.target.value))}
-                    />
+                    {/* A stepper, not a number field: clearing a typed
+                        quantity on a phone leaves an empty value. */}
+                    <div className="qty" role="group" aria-label={`Quantity, ${line.productName}`}>
+                      <button
+                        type="button"
+                        aria-label="Decrease quantity"
+                        disabled={line.quantity <= 1}
+                        onClick={() => setQuantity(line.variantId, line.quantity - 1)}
+                      >
+                        &minus;
+                      </button>
+                      <span className="qty-value" aria-live="polite">{line.quantity}</span>
+                      <button
+                        type="button"
+                        aria-label="Increase quantity"
+                        disabled={line.quantity >= 99}
+                        onClick={() => setQuantity(line.variantId, line.quantity + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
                     <button className="btn-link" onClick={() => remove(line.variantId)}>
                       Remove
                     </button>

@@ -22,18 +22,27 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(0, "NEXT_PUBLIC_API_URL is not set; no payment backend to call.");
   }
 
-  const response = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      // ngrok's free tier serves an HTML interstitial to anything that looks
-      // like a browser, which arrives here as "Unexpected token '<'" instead of
-      // JSON. This header skips it. Harmless against any other host.
-      "ngrok-skip-browser-warning": "true",
-      ...init?.headers,
-    },
-    cache: "no-store",
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${BASE}${path}`, {
+      ...init,
+      headers: {
+        // Skips ngrok's HTML interstitial, which otherwise arrives instead
+        // of JSON. Harmless against any other host.
+        "ngrok-skip-browser-warning": "true",
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+      cache: "no-store",
+    });
+  } catch {
+    // Network-level failure. Note an unreachable backend usually surfaces as a
+    // CORS error: its error page carries no Access-Control-Allow-Origin.
+    throw new ApiError(
+      0,
+      "Could not reach the payment service. It may be offline, or its address may have changed.",
+    );
+  }
 
   const text = await response.text();
   let body: unknown = null;
@@ -80,14 +89,9 @@ export async function initializePayment(
   return { authorizationUrl, reference };
 }
 
-/**
- * GET /payments/verify?reference=
- *
- * The status that matters is `payment.status`, NOT the top-level `status`.
- * The outer one reports whether the verify call itself worked — it reads
- * "success" for a lookup that found a *failed* payment, so trusting it would
- * tell every buyer their payment went through.
- */
+// GET /payments/verify. Read `payment.status`, NOT the top-level `status` —
+// the outer one reports whether the lookup worked, and says "success" even for
+// a failed payment.
 export async function verifyPayment(reference: string): Promise<PaymentVerification> {
   const raw = await request<unknown>(
     `/payments/verify?reference=${encodeURIComponent(reference)}`,
@@ -102,9 +106,7 @@ export async function verifyPayment(reference: string): Promise<PaymentVerificat
 
   return {
     reference: str(payment.reference) ?? reference,
-    // Only this exact value means money moved. Anything unrecognised is
-    // treated as unpaid: claiming otherwise is the one mistake with a real
-    // cost attached.
+    // Anything unrecognised counts as unpaid.
     paid: status.toLowerCase() === "success",
     status,
     amount: num(payment.amount),

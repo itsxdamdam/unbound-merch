@@ -9,10 +9,8 @@ import { forgetReference, recallReference } from "@/lib/payment-reference";
 import { useCart } from "@/lib/cart";
 import type { PaymentVerification } from "@/lib/types";
 
-/**
- * Where Paystack returns the buyer. The redirect itself proves nothing — anyone
- * can reach this URL — so only the backend's verify call decides.
- */
+// Where Paystack returns the buyer. The redirect proves nothing; only the
+// backend's verify call decides.
 export default function PaymentCompletePage() {
   return (
     <Suspense fallback={<p className="empty">Checking your payment…</p>}>
@@ -32,8 +30,7 @@ function PaymentComplete() {
   const { clear } = useCart();
   const [state, setState] = useState<State>({ phase: "checking" });
 
-  // Paystack appends both; `reference` is ours, `trxref` is theirs, and they
-  // are normally identical.
+  // Paystack appends both, normally identical.
   const reference =
     searchParams.get("reference") ?? searchParams.get("trxref") ?? null;
 
@@ -110,23 +107,15 @@ function PaymentComplete() {
   }
 
   const { result } = state;
+  const outcome = describe(result);
 
   return (
     <>
-      <h1>{result.paid ? "Payment received" : "Payment not completed"}</h1>
+      <h1>{outcome.title}</h1>
 
-      {result.paid ? (
-        <div className="notice" style={{ background: "#e7f3ec", borderColor: "#b8ddc7" }}>
-          <strong>Thank you.</strong> We&rsquo;ve got your payment and we&rsquo;ll be in
-          touch to arrange delivery.
-        </div>
-      ) : (
-        <div className="notice notice-warn">
-          <strong>This payment didn&rsquo;t go through</strong> — Paystack reports{" "}
-          <span className="mono">{result.status}</span>. Your items are still in your
-          cart, so you can try again.
-        </div>
-      )}
+      <div className={`notice ${outcome.tone}`}>
+        <strong>{outcome.headline}</strong> {outcome.detail}
+      </div>
 
       <div className="panel stack" style={{ marginTop: 22, maxWidth: 460 }}>
         {result.items.length > 0 && (
@@ -169,10 +158,91 @@ function PaymentComplete() {
       </div>
 
       <p style={{ marginTop: 20 }}>
-        <Link className="btn btn-secondary" href={result.paid ? "/" : "/checkout"}>
-          {result.paid ? "Back to the shop" : "Try again"}
+        <Link className="btn btn-secondary" href={outcome.retry ? "/checkout" : "/"}>
+          {outcome.retry ? "Try again" : "Back to the shop"}
         </Link>
       </p>
     </>
   );
+}
+
+interface Outcome {
+  title: string;
+  headline: string;
+  detail: string;
+  tone: string;
+  retry: boolean;
+}
+
+// Paystack's transaction statuses. Anything unrecognised is treated as not
+// paid and sent to a human rather than guessed at.
+function describe(result: PaymentVerification): Outcome {
+  if (result.paid) {
+    return {
+      title: "Payment received",
+      headline: "Thank you.",
+      detail: "We\u2019ve gotten your payment and we\u2019ll be in touch for pickup location.",
+      tone: "notice-ok",
+      retry: false,
+    };
+  }
+
+  switch (result.status.toLowerCase()) {
+    case "failed":
+      return {
+        title: "Payment declined",
+        headline: "Your bank declined the payment.",
+        detail:
+          "Nothing was charged. This is usually an insufficient balance, a card limit, " +
+          "or a block on online payments \u2014 trying another card or your bank app often works. " +
+          "Your items are still in your cart.",
+        tone: "notice-error",
+        retry: true,
+      };
+
+    case "abandoned":
+      return {
+        title: "Payment not completed",
+        headline: "The payment was cancelled before it finished.",
+        detail: "Nothing was charged, and your items are still in your cart.",
+        tone: "notice-warn",
+        retry: true,
+      };
+
+    case "reversed":
+      return {
+        title: "Payment reversed",
+        headline: "This payment was reversed.",
+        detail:
+          "Any amount taken is on its way back to you. Nothing is owed, and you can " +
+          "order again whenever you like.",
+        tone: "notice-warn",
+        retry: true,
+      };
+
+    case "pending":
+    case "ongoing":
+    case "queued":
+      return {
+        title: "Payment pending",
+        headline: "Your bank hasn\u2019t finished this payment yet.",
+        detail:
+          "Do not pay again \u2014 refresh this page in a minute. Bank transfers and USSD " +
+          "can take a few minutes to settle.",
+        tone: "notice-warn",
+        retry: false,
+      };
+
+    default:
+      return {
+        title: "Payment not completed",
+        headline: "This payment did not go through.",
+        detail:
+          `Paystack reports \u201c${result.status}\u201d. Nothing was charged and your items ` +
+          "are still in your cart. If you think you were charged, message us with the " +
+          "reference below rather than paying again.",
+        tone: "notice-warn",
+        retry: true,
+      };
+  }
 }

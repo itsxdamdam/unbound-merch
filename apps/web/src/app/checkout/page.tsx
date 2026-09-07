@@ -33,21 +33,16 @@ export default function CheckoutPage() {
 
   function onSubmit(formData: FormData) {
     setError(null);
-    // Narrowed here: the early return above does not narrow inside a closure.
     const resolved = cart;
     if (!resolved) return;
 
     startTransition(async () => {
-      // Not cleared here — /payment/complete clears it only once verified.
       try {
-        // Prices ride along: the catalogue is hard-coded and the backend has
-        // nothing to price against. See PaymentInitializeRequest.
         const { authorizationUrl, reference } = await initializePayment({
           amount: resolved.total,
           customerName: String(formData.get("name") ?? ""),
           customerEmail: String(formData.get("email") ?? ""),
           customerPhone: String(formData.get("phone") ?? ""),
-          // Back to us, not the API. Paystack appends ?reference.
           callbackUrl: `${window.location.origin}/payment/complete`,
           items: resolved.lines.map((line) => ({
             name: line.productName,
@@ -59,7 +54,6 @@ export default function CheckoutPage() {
 
         if (reference) rememberReference(reference);
 
-        // Full navigation, not a router push: Paystack is another origin.
         window.location.href = authorizationUrl;
       } catch (err) {
         setError(
@@ -81,7 +75,7 @@ export default function CheckoutPage() {
             <input id="name" name="name" required autoComplete="name" />
           </div>
           <div>
-            <label htmlFor="phone">Number</label>
+            <label htmlFor="phone">Whatsapp Number</label>
             <input
               id="phone"
               name="phone"
@@ -91,6 +85,10 @@ export default function CheckoutPage() {
               placeholder="08012345678"
             />
           </div>
+          <span className="hint">
+            Please ensure this is the correct number. We&rsquo;ll use this to
+            contact you about your order.
+          </span>
           <div>
             <label htmlFor="email">Email</label>
             <input

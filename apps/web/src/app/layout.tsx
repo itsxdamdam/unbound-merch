@@ -2,16 +2,26 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CartProvider } from "@/lib/cart";
 import { CartPill } from "@/components/CartPill";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Unbound Merch",
-  description: "Order by bank transfer.",
+  description: "Godacity merch. Pay with Paystack.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Applies a stored theme before first paint, so dark mode does not
+            flash white on load. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("unbound-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
+      </head>
       <body>
         {/* Behind everything, fixed. See .backdrop in globals.css. */}
         <div className="backdrop" aria-hidden="true" />
@@ -19,16 +29,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <header className="site-header">
             <div className="wrap">
               <Link className="brand" href="/" aria-label="Unbound — Godacity, home">
-                {/* The logo is recoloured, not overlaid: the PNG is used as a
-                    CSS mask and the brand purple shows through its alpha. An
-                    overlay on top of the artwork would tint the transparent
-                    background too. See .brand-logo in globals.css. */}
-                <span className="brand-logo" role="img" aria-label="Unbound · Godacity" />
+                  <span className="brand-logo" role="img" aria-label="Unbound · Godacity" />
               </Link>
-              {/* Cart only. Categories are reachable from the chips on the
-                  shop pages, and /admin is deliberately unlinked — it is not a
-                  customer destination, and it has no authentication yet. */}
+              {/* Categories live in the chips on the shop pages. */}
               <nav className="nav">
+                <ThemeToggle />
                 <CartPill />
               </nav>
             </div>

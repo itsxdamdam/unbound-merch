@@ -1,10 +1,6 @@
 import type { CategorySlug } from "./types";
 
-/**
- * Display metadata for the fixed merch lines: how each reads and in what order
- * it appears. The backend is the source of truth for which categories exist;
- * this is the source of truth for how they look.
- */
+// How each category reads, and the order it appears in.
 export interface CategoryMeta {
   slug: CategorySlug;
   label: string;

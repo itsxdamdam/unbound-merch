@@ -1,12 +1,7 @@
 import type { Product } from "./types";
 
-/**
- * The catalogue. Adding a product is an entry here plus its photography in
- * `public/products/`.
- *
- * Variant ids must stay stable — carts in browsers store them, so renaming one
- * silently empties returning customers' carts.
- */
+// The catalogue. A product is an entry here plus its photography in
+// `public/products/`. Variant ids must stay stable — carts store them.
 const SIZES = ["M", "L", "XL", "XXL"];
 
 function sized(slug: string, price: number) {
@@ -52,10 +47,11 @@ export const PRODUCTS: Product[] = [
   {
     slug: "tshirt-white",
     name: "Godacity Tee — White",
-    description: "White tee with a small chest hit. GODS IN THE CITY across the back.",
+    description:
+      "White tee with a small chest hit. GODS IN THE CITY across the back.",
     category: "tshirts",
-    fromPrice: 8500,
-    variants: sized("tshirt-white", 8500),
+    fromPrice: 9000,
+    variants: sized("tshirt-white", 9000),
     images: [
       {
         url: "/products/tshirts/tshirt-white-front.png",
@@ -125,7 +121,8 @@ export const PRODUCTS: Product[] = [
   {
     slug: "cap",
     name: "Godacity Cap",
-    description: "Six-panel cap with the GODACITY logo and Unbound crest on the front.",
+    description:
+      "Six-panel cap with the GODACITY logo and Unbound crest on the front.",
     category: "caps",
     fromPrice: 5000,
     variants: [

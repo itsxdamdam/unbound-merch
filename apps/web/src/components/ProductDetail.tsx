@@ -19,10 +19,8 @@ export interface DetailVariant {
   price: number;
 }
 
-/**
- * Gallery + variant picker together: choosing "Purple" must change the
- * photograph, choosing "XL" must not.
- */
+// Gallery and variant picker together: choosing "Purple" changes the
+// photograph, choosing "XL" does not.
 export function ProductDetail({
   name,
   description,
@@ -37,7 +35,7 @@ export function ProductDetail({
   const { add } = useCart();
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(variants[0]?.id ?? "");
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [rawActiveIndex, setActiveIndex] = useState(0);
   const [added, setAdded] = useState(false);
 
   const selected = variants.find((v) => v.id === selectedId);
@@ -49,7 +47,8 @@ export function ProductDetail({
     return forVariant.length > 0 ? forVariant : images.filter((i) => i.variantId === null);
   }, [images, selectedId]);
 
-  const active = shown[Math.min(activeIndex, shown.length - 1)] ?? null;
+  // Clamped: switching variant can shorten the list under a higher index.
+  const activeIndex = Math.min(rawActiveIndex, Math.max(0, shown.length - 1));
   const onlyOneVariant = variants.length === 1;
 
   function selectVariant(id: string) {
@@ -63,19 +62,27 @@ export function ProductDetail({
     <div className="cols">
       <div className="gallery">
         <div className="gallery-main">
-          {active ? (
-            <Image
-              key={active.url}
-              src={active.url}
-              alt={active.alt}
-              fill
-              priority
-              sizes="(max-width: 760px) 100vw, 620px"
-              style={{ objectFit: "contain" }}
-            />
-          ) : (
-            <span className="thumb-empty">no photo</span>
-          )}
+          {shown.length === 0 && <span className="thumb-empty">no photo</span>}
+          {shown.map((image, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <Image
+                key={image.url}
+                className="gallery-img"
+                data-active={isActive}
+                src={image.url}
+                // Only the visible one is described; the rest are decorative
+                // stand-ins so a screen reader is not read three photos of the
+                // same product.
+                alt={isActive ? image.alt : ""}
+                aria-hidden={!isActive}
+                fill
+                priority={index === 0}
+                sizes="(max-width: 760px) 100vw, 620px"
+                style={{ objectFit: "contain" }}
+              />
+            );
+          })}
         </div>
 
         {shown.length > 1 && (

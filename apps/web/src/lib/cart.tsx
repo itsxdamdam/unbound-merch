@@ -70,11 +70,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  // Never removes. It used to drop the line at anything below 1, which meant
+  // an empty input — what a phone keyboard produces the moment you clear the
+  // field to type a new number — silently deleted the item. Removal is an
+  // explicit action, so a quantity change must not be able to cause one.
   const setQuantity = useCallback((variantId: string, quantity: number) => {
+    if (!Number.isFinite(quantity)) return;
+    const clamped = Math.min(99, Math.max(1, Math.trunc(quantity)));
     setLines((current) =>
-      quantity < 1
-        ? current.filter((l) => l.variantId !== variantId)
-        : current.map((l) => (l.variantId === variantId ? { ...l, quantity } : l)),
+      current.map((l) => (l.variantId === variantId ? { ...l, quantity: clamped } : l)),
     );
   }, []);
 

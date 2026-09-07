@@ -1,10 +1,5 @@
-/**
- * Whole naira, as an integer — the same unit the payment API takes.
- *
- * Integers stay exact in JS; the moment a price gains kobo it becomes a float
- * and stops adding up exactly. Sub-naira pricing would mean switching both
- * sides to kobo.
- */
+// Whole naira, as an integer — the unit the payment API takes. Kobo would
+// make these floats, and floats do not add up exactly.
 export type Naira = number;
 
 export type CategorySlug = "tshirts" | "jerseys" | "scarves" | "caps" | "tote-bags";
@@ -17,11 +12,7 @@ export interface ProductImage {
 }
 
 export interface ProductVariant {
-  /**
-   * Stable across deploys. The cart stores these in the browser and the
-   * payment API receives them, so renaming one empties returning customers'
-   * carts and orphans anything in flight.
-   */
+  /** Stable across deploys: renaming one empties returning customers' carts. */
   id: string;
   /** "M", "XL", "Black", "One Size". */
   label: string;
@@ -29,14 +20,7 @@ export interface ProductVariant {
   price: Naira;
 }
 
-/**
- * No stock field, deliberately.
- *
- * The catalogue is hard-coded and the backend handles payment only, so nothing
- * in this system can know how many of something is left. Rendering a count
- * would be inventing one. If stock tracking arrives later it belongs on
- * whatever owns it, and this type grows a field then.
- */
+/** No stock field: nothing in this system can know stock levels. */
 export interface Product {
   slug: string;
   name: string;
@@ -63,10 +47,9 @@ export interface PaymentItem {
 }
 
 /**
- * SECURITY: `amount` and `unitPrice` are computed in the browser and can be
- * edited before they are sent — someone can pay ₦100 for a ₦17,000 jersey.
- * Prices are hard-coded here, so the backend has no copy to check against.
- * Fix belongs there: a name+size -> price map, recompute, reject mismatches.
+ * SECURITY: `amount` and `unitPrice` come from the browser and can be edited
+ * before they are sent. The backend needs its own name+size -> price map to
+ * recompute the total and reject mismatches.
  */
 export interface PaymentInitializeRequest {
   /** Whole naira. Sum of the lines. */
