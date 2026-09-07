@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { formatKobo, multiplyKobo } from "@/lib/money";
+import { formatNaira } from "@/lib/money";
 import { useCart } from "@/lib/cart";
 import { resolveCart, type ResolvedCart } from "@/lib/catalog";
 
@@ -36,8 +36,6 @@ export default function CartPage() {
     );
   }
 
-  const overStock = cart.lines.filter((l) => l.quantity > l.available);
-
   return (
     <>
       <h1>Your cart</h1>
@@ -45,80 +43,55 @@ export default function CartPage() {
 
       <div className="cols">
         <div className="panel">
-          <div className="scroll-x">
-            <table>
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th className="num">Price</th>
-                  <th className="num">Qty</th>
-                  <th className="num">Total</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {cart.lines.map((line) => (
-                  <tr key={line.variantId}>
-                    <td>
-                      <div className="cart-line">
-                        {line.image && (
-                          <Link className="cart-thumb" href={`/product/${line.productSlug}`}>
-                            <Image src={line.image.url} alt={line.image.alt} fill sizes="56px" />
-                          </Link>
-                        )}
-                        <div>
-                          <Link href={`/product/${line.productSlug}`} style={{ fontWeight: 550 }}>
-                            {line.productName}
-                          </Link>
-                          <div className="muted" style={{ fontSize: 12 }}>
-                            {line.variantLabel}
-                            {line.quantity > line.available && (
-                              <span style={{ color: "var(--danger)" }}>
-                                {" "}· only {line.available} left
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="num">{formatKobo(line.unitPriceKobo)}</td>
-                    <td className="num">
-                      <input
-                        type="number" min={1} max={Math.max(1, line.available)}
-                        value={line.quantity} style={{ width: 68 }}
-                        onChange={(e) => setQuantity(line.variantId, Number(e.target.value))}
-                      />
-                    </td>
-                    <td className="num">
-                      {formatKobo(multiplyKobo(line.unitPriceKobo, line.quantity))}
-                    </td>
-                    <td className="num">
-                      <button className="btn-link" onClick={() => remove(line.variantId)}>
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="cart-items">
+            {cart.lines.map((line) => (
+              <li className="cart-item" key={line.variantId}>
+                {line.image ? (
+                  <Link className="cart-thumb" href={`/product/${line.productSlug}`}>
+                    <Image src={line.image.url} alt={line.image.alt} fill sizes="56px" />
+                  </Link>
+                ) : (
+                  <span className="cart-thumb" aria-hidden="true" />
+                )}
+
+                <div className="cart-item-main">
+                  <Link className="cart-item-name" href={`/product/${line.productSlug}`}>
+                    {line.productName}
+                  </Link>
+                  <div className="muted" style={{ fontSize: 12 }}>
+                    {line.variantLabel} · {formatNaira(line.unitPrice)}
+                  </div>
+
+                  <div className="cart-item-controls">
+                    <label className="visually-hidden" htmlFor={`qty-${line.variantId}`}>
+                      Quantity for {line.productName}
+                    </label>
+                    <input
+                      id={`qty-${line.variantId}`}
+                      type="number" min={1} max={99}
+                      value={line.quantity}
+                      onChange={(e) => setQuantity(line.variantId, Number(e.target.value))}
+                    />
+                    <button className="btn-link" onClick={() => remove(line.variantId)}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+
+                <span className="cart-item-total mono">
+                  {formatNaira(line.unitPrice * line.quantity)}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="panel stack">
           <div className="row-split">
             <span>Subtotal</span>
-            <strong style={{ fontSize: 20 }}>{formatKobo(cart.totalKobo)}</strong>
+            <strong style={{ fontSize: 20 }}>{formatNaira(cart.total)}</strong>
           </div>
-          <p className="hint" style={{ margin: 0 }}>
-            Delivery is arranged over WhatsApp after payment.
-          </p>
-          {overStock.length > 0 ? (
-            <div className="notice notice-error">
-              Reduce the quantities above — some items no longer have that much in stock.
-            </div>
-          ) : (
-            <Link className="btn" href="/checkout">Checkout</Link>
-          )}
+          <Link className="btn" href="/checkout">Checkout</Link>
           <Link className="btn btn-secondary" href="/">Keep shopping</Link>
         </div>
       </div>

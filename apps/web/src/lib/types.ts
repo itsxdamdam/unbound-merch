@@ -1,13 +1,11 @@
 /**
- * The shapes the backend returns.
+ * Whole naira, as an integer — the same unit the payment API takes.
  *
- * Money crosses the wire as a STRING of kobo, never a number. Prices are
- * integer minor units and JSON numbers are IEEE doubles — a float is the wrong
- * type for money, and a string keeps the exact value intact until it is either
- * formatted for display or handed back to the backend untouched. The frontend
- * never does arithmetic that decides what anyone is charged.
+ * Integers stay exact in JS; the moment a price gains kobo it becomes a float
+ * and stops adding up exactly. Sub-naira pricing would mean switching both
+ * sides to kobo.
  */
-export type Kobo = string;
+export type Naira = number;
 
 export type CategorySlug = "tshirts" | "jerseys" | "scarves" | "caps" | "tote-bags";
 
@@ -19,50 +17,35 @@ export interface ProductImage {
 }
 
 export interface ProductVariant {
+  /**
+   * Stable across deploys. The cart stores these in the browser and the
+   * payment API receives them, so renaming one empties returning customers'
+   * carts and orphans anything in flight.
+   */
   id: string;
   /** "M", "XL", "Black", "One Size". */
   label: string;
-  priceKobo: Kobo;
-  /** Available to sell right now, after holds. Computed by the backend. */
-  available: number;
+  /** Whole naira. */
+  price: Naira;
 }
 
+/**
+ * No stock field, deliberately.
+ *
+ * The catalogue is hard-coded and the backend handles payment only, so nothing
+ * in this system can know how many of something is left. Rendering a count
+ * would be inventing one. If stock tracking arrives later it belongs on
+ * whatever owns it, and this type grows a field then.
+ */
 export interface Product {
   slug: string;
   name: string;
   description: string;
   category: CategorySlug;
-  /** Lowest variant price, for the "from" figure on the grid. */
-  fromKobo: Kobo;
+  /** Lowest variant price, for the "from" figure on the grid. Whole naira. */
+  fromPrice: Naira;
   variants: ProductVariant[];
   images: ProductImage[];
-}
-
-export type OrderStatus =
-  | "pending_payment"
-  | "paid"
-  | "expired"
-  | "cancelled"
-  | "manual_review";
-
-export interface OrderItem {
-  name: string;
-  variantLabel: string;
-  quantity: number;
-  unitPriceKobo: Kobo;
-}
-
-export interface Order {
-  referenceCode: string;
-  status: OrderStatus;
-  totalKobo: Kobo;
-  buyerName: string;
-  buyerPhone: string;
-  buyerEmail: string;
-  items: OrderItem[];
-  /** ISO 8601. When the stock hold lapses. */
-  expiresAt: string;
-  paidAt: string | null;
 }
 
 export interface CartLine {
@@ -70,15 +53,52 @@ export interface CartLine {
   quantity: number;
 }
 
-export interface CreateOrderRequest {
-  items: CartLine[];
-  buyerName: string;
-  buyerPhone: string;
-  buyerEmail: string;
+/** `size` is the variant label whatever the axis — "M", "Purple", "One Size". */
+export interface PaymentItem {
+  name: string;
+  size: string;
+  quantity: number;
+  /** Whole naira. */
+  unitPrice: Naira;
 }
 
-export interface CreateOrderResponse {
-  referenceCode: string;
-  /** Paystack's hosted checkout URL. The browser navigates to it. */
+/**
+ * SECURITY: `amount` and `unitPrice` are computed in the browser and can be
+ * edited before they are sent — someone can pay ₦100 for a ₦17,000 jersey.
+ * Prices are hard-coded here, so the backend has no copy to check against.
+ * Fix belongs there: a name+size -> price map, recompute, reject mismatches.
+ */
+export interface PaymentInitializeRequest {
+  /** Whole naira. Sum of the lines. */
+  amount: Naira;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  /** Where Paystack returns the buyer. Paystack appends ?reference & ?trxref. */
+  callbackUrl: string;
+  items: PaymentItem[];
+}
+
+export interface PaymentInitializeResponse {
   authorizationUrl: string;
+  reference: string;
+}
+
+/** Flattened from the verify response's `payment` object. */
+export interface PaymentVerification {
+  reference: string;
+  /** True only when the backend reports a settled, successful charge. */
+  paid: boolean;
+  /** Verbatim status from the backend, for display and support. */
+  status: string;
+  /** Whole naira, when reported. */
+  amount: Naira | null;
+  currency: string | null;
+  /** ISO 8601, when the charge settled. */
+  paidAt: string | null;
+  /** "card", "bank", "ussd" … */
+  channel: string | null;
+  customerName: string | null;
+  /** Echoed back from initialize. */
+  items: PaymentItem[];
 }

@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { formatKobo, multiplyKobo } from "@/lib/money";
+import { formatNaira } from "@/lib/money";
 import { useCart } from "@/lib/cart";
 import { resolveCart, type ResolvedCart } from "@/lib/catalog";
-import { createOrder } from "@/lib/api";
+import { initializePayment } from "@/lib/api";
+import { rememberReference } from "@/lib/payment-reference";
 
 export default function CheckoutPage() {
   const { lines, ready } = useCart();
@@ -32,24 +33,39 @@ export default function CheckoutPage() {
 
   function onSubmit(formData: FormData) {
     setError(null);
+    // Narrowed here: the early return above does not narrow inside a closure.
+    const resolved = cart;
+    if (!resolved) return;
+
     startTransition(async () => {
-      // On success this redirects and never returns; the cart is deliberately
-      // NOT cleared here — the order page clears it once the order exists, so
-      // a failed checkout doesn't lose the buyer's basket.
+      // Not cleared here — /payment/complete clears it only once verified.
       try {
-        // Ids and quantities only. The backend prices the order and starts the
-        // Paystack transaction; nothing here decides what anyone is charged.
-        const { authorizationUrl } = await createOrder({
-          items: lines,
-          buyerName: String(formData.get("name") ?? ""),
-          buyerPhone: String(formData.get("phone") ?? ""),
-          buyerEmail: String(formData.get("email") ?? ""),
+        // Prices ride along: the catalogue is hard-coded and the backend has
+        // nothing to price against. See PaymentInitializeRequest.
+        const { authorizationUrl, reference } = await initializePayment({
+          amount: resolved.total,
+          customerName: String(formData.get("name") ?? ""),
+          customerEmail: String(formData.get("email") ?? ""),
+          customerPhone: String(formData.get("phone") ?? ""),
+          // Back to us, not the API. Paystack appends ?reference.
+          callbackUrl: `${window.location.origin}/payment/complete`,
+          items: resolved.lines.map((line) => ({
+            name: line.productName,
+            size: line.variantLabel,
+            quantity: line.quantity,
+            unitPrice: line.unitPrice,
+          })),
         });
+
+        if (reference) rememberReference(reference);
+
         // Full navigation, not a router push: Paystack is another origin.
         window.location.href = authorizationUrl;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Something went wrong. Please try again.",
+          err instanceof Error
+            ? err.message
+            : "Something went wrong. Please try again.",
         );
       }
     });
@@ -58,10 +74,6 @@ export default function CheckoutPage() {
   return (
     <>
       <h1>Checkout</h1>
-      <p className="lede">
-        We&rsquo;ll hold your items for 15 minutes while you pay.
-      </p>
-
       <div className="cols">
         <form className="panel stack" action={onSubmit}>
           <div>
@@ -69,21 +81,25 @@ export default function CheckoutPage() {
             <input id="name" name="name" required autoComplete="name" />
           </div>
           <div>
-            <label htmlFor="phone">WhatsApp number</label>
+            <label htmlFor="phone">Number</label>
             <input
-              id="phone" name="phone" required inputMode="tel"
-              autoComplete="tel" placeholder="08012345678"
+              id="phone"
+              name="phone"
+              required
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="08012345678"
             />
-            <p className="hint">
-              We confirm your payment here and arrange delivery on WhatsApp.
-              Nigerian numbers only.
-            </p>
           </div>
           <div>
             <label htmlFor="email">Email</label>
             <input
-              id="email" name="email" required type="email"
-              autoComplete="email" placeholder="you@example.com"
+              id="email"
+              name="email"
+              required
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
             />
             <p className="hint">Paystack sends your payment receipt here.</p>
           </div>
@@ -93,7 +109,8 @@ export default function CheckoutPage() {
             {pending ? "Taking you to Paystack…" : "Pay with Paystack"}
           </button>
           <p className="hint" style={{ margin: 0 }}>
-            You&rsquo;ll pay on Paystack&rsquo;s secure page. We never see your card details.
+            You&rsquo;ll pay on Paystack&rsquo;s secure page. We never see your
+            card details.
           </p>
         </form>
 
@@ -108,14 +125,14 @@ export default function CheckoutPage() {
                 </span>
               </span>
               <span className="mono">
-                {formatKobo(multiplyKobo(line.unitPriceKobo, line.quantity))}
+                {formatNaira(line.unitPrice * line.quantity)}
               </span>
             </div>
           ))}
           <hr className="divider" />
           <div className="row-split">
             <strong>Total</strong>
-            <strong style={{ fontSize: 20 }}>{formatKobo(cart.totalKobo)}</strong>
+            <strong style={{ fontSize: 20 }}>{formatNaira(cart.total)}</strong>
           </div>
         </div>
       </div>

@@ -10,6 +10,5 @@
     "build": "npm run build --workspace @store/web",
     "start": "npm run start --workspace @store/web",
     "typecheck": "npm run typecheck --workspace @store/web"
-  },
-  "devDependencies": {}
+  }
 }

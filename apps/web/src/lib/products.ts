@@ -1,46 +1,40 @@
 import type { Product } from "./types";
 
 /**
- * Placeholder catalogue, used ONLY when NEXT_PUBLIC_API_URL is unset.
+ * The catalogue. Adding a product is an entry here plus its photography in
+ * `public/products/`.
  *
- * The backend does not exist yet, and a storefront that cannot render a
- * product is a storefront nobody can work on. This keeps the shop, the
- * gallery, the hover flip and the cart developable until there is an API to
- * point at. It is not a cache and not a fallback for an API that is merely
- * down — `catalog.ts` uses it only when no backend is configured at all.
- *
- * Delete this file once the backend is live; nothing else imports it directly.
+ * Variant ids must stay stable — carts in browsers store them, so renaming one
+ * silently empties returning customers' carts.
  */
 const SIZES = ["M", "L", "XL", "XXL"];
 
-function sized(slug: string, priceNaira: number) {
+function sized(slug: string, price: number) {
   return SIZES.map((label) => ({
     id: `${slug}-${label.toLowerCase()}`,
     label,
-    priceKobo: String(priceNaira * 100),
-    available: 20,
+    price,
   }));
 }
 
-function single(slug: string, priceNaira: number, label = "One Size") {
+function single(slug: string, price: number, label = "One Size") {
   return [
     {
       id: `${slug}-${label.toLowerCase().replace(/\s+/g, "-")}`,
       label,
-      priceKobo: String(priceNaira * 100),
-      available: 20,
+      price,
     },
   ];
 }
 
-export const FIXTURE_PRODUCTS: Product[] = [
+export const PRODUCTS: Product[] = [
   {
     slug: "tshirt-black",
     name: "Godacity Tee — Black",
     description:
       "Heavyweight black tee. GODACITY across the chest, THE GODACIOUS ONES across the back.",
     category: "tshirts",
-    fromKobo: "900000",
+    fromPrice: 9000,
     variants: sized("tshirt-black", 9000),
     images: [
       {
@@ -60,7 +54,7 @@ export const FIXTURE_PRODUCTS: Product[] = [
     name: "Godacity Tee — White",
     description: "White tee with a small chest hit. GODS IN THE CITY across the back.",
     category: "tshirts",
-    fromKobo: "850000",
+    fromPrice: 8500,
     variants: sized("tshirt-white", 8500),
     images: [
       {
@@ -81,7 +75,7 @@ export const FIXTURE_PRODUCTS: Product[] = [
     description:
       "Purple and red football jersey with lightning-bolt shoulders and a GODACITY chest print.",
     category: "jerseys",
-    fromKobo: "1700000",
+    fromPrice: 17000,
     variants: sized("jersey", 17000),
     images: [
       {
@@ -102,7 +96,7 @@ export const FIXTURE_PRODUCTS: Product[] = [
     description:
       "Square print scarf. Brightly coloured skyscrapers seen from below, GODACITY at the centre.",
     category: "scarves",
-    fromKobo: "700000",
+    fromPrice: 7000,
     variants: single("scarf-cityscape-blue", 7000),
     images: [
       {
@@ -118,7 +112,7 @@ export const FIXTURE_PRODUCTS: Product[] = [
     description:
       "Square print scarf. Bold purple, orange and yellow geometry with GODACITY across the middle.",
     category: "scarves",
-    fromKobo: "700000",
+    fromPrice: 7000,
     variants: single("scarf-geometric-purple", 7000),
     images: [
       {
@@ -133,10 +127,10 @@ export const FIXTURE_PRODUCTS: Product[] = [
     name: "Godacity Cap",
     description: "Six-panel cap with the GODACITY logo and Unbound crest on the front.",
     category: "caps",
-    fromKobo: "500000",
+    fromPrice: 5000,
     variants: [
-      { id: "cap-black", label: "Black", priceKobo: "500000", available: 20 },
-      { id: "cap-purple", label: "Purple", priceKobo: "500000", available: 20 },
+      { id: "cap-black", label: "Black", price: 5000 },
+      { id: "cap-purple", label: "Purple", price: 5000 },
     ],
     images: [
       {
@@ -156,7 +150,7 @@ export const FIXTURE_PRODUCTS: Product[] = [
     name: "Godacity Tote — Black",
     description: "Black cotton tote with the GODACITY logo.",
     category: "tote-bags",
-    fromKobo: "500000",
+    fromPrice: 5000,
     variants: single("tote-black", 5000),
     images: [
       {
@@ -171,7 +165,7 @@ export const FIXTURE_PRODUCTS: Product[] = [
     name: "The Godacious Ones Tote — Green",
     description: "Green cotton tote carrying THE GODACIOUS ONES artwork.",
     category: "tote-bags",
-    fromKobo: "500000",
+    fromPrice: 5000,
     variants: single("tote-green", 5000),
     images: [
       {
@@ -186,7 +180,7 @@ export const FIXTURE_PRODUCTS: Product[] = [
     name: "Godacity Tote — Red",
     description: "Red cotton tote with the GODACITY logo.",
     category: "tote-bags",
-    fromKobo: "500000",
+    fromPrice: 5000,
     variants: single("tote-red", 5000),
     images: [
       {

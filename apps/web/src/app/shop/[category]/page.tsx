@@ -22,7 +22,6 @@ export default async function CategoryPage({
   return (
     <>
       <h1>{meta.label}</h1>
-      <p className="lede">Pay with Paystack. Your order is held for 15 minutes.</p>
       <div className="chips">
         <Link className="chip" href="/">All</Link>
         {CATEGORIES.map((c) => (

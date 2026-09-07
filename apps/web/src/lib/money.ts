@@ -1,28 +1,13 @@
-import type { Kobo } from "./types";
+import type { Naira } from "./types";
 
 /**
- * Display formatting only.
+ * Display formatting.
  *
- * Everything that decides an amount — totals, comparisons against what
- * Paystack charged — happens on the backend. This turns a kobo string into
- * something a person reads, and does nothing else.
+ * Prices are whole naira, so no decimals are shown — "₦9,000", the way a
+ * Nigerian shop actually prints it, not "₦9,000.00".
  */
-export function formatKobo(kobo: Kobo, opts: { symbol?: boolean } = {}): string {
-  const value = BigInt(kobo);
-  const negative = value < 0n;
-  const abs = negative ? -value : value;
-  const whole = abs / 100n;
-  const frac = (abs % 100n).toString().padStart(2, "0");
-  const grouped = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+export function formatNaira(amount: Naira, opts: { symbol?: boolean } = {}): string {
   const symbol = opts.symbol === false ? "" : "₦";
-  return `${negative ? "-" : ""}${symbol}${grouped}.${frac}`;
-}
-
-/** Line total, in kobo, as a string. BigInt so nothing rounds. */
-export function multiplyKobo(kobo: Kobo, quantity: number): Kobo {
-  return (BigInt(kobo) * BigInt(quantity)).toString();
-}
-
-export function sumKobo(values: Kobo[]): Kobo {
-  return values.reduce((total, value) => total + BigInt(value), 0n).toString();
+  const grouped = Math.abs(amount).toLocaleString("en-NG", { maximumFractionDigits: 0 });
+  return `${amount < 0 ? "-" : ""}${symbol}${grouped}`;
 }

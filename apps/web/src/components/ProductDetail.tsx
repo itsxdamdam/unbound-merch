@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { formatKobo } from "@/lib/money";
+import { formatNaira } from "@/lib/money";
 import { useCart } from "@/lib/cart";
 
 export interface DetailImage {
@@ -15,17 +15,13 @@ export interface DetailImage {
 export interface DetailVariant {
   id: string;
   label: string;
-  /** Kobo, as a string. See lib/types.ts. */
-  priceKobo: string;
-  available: number;
+  /** Whole naira. See lib/types.ts. */
+  price: number;
 }
 
 /**
- * Gallery + variant picker + add to cart.
- *
- * These are one component because they are one interaction: choosing "Purple"
- * has to change the photograph, and choosing "XL" must not. Splitting them
- * would mean lifting the selected variant into a shared parent for no gain.
+ * Gallery + variant picker together: choosing "Purple" must change the
+ * photograph, choosing "XL" must not.
  */
 export function ProductDetail({
   name,
@@ -40,8 +36,7 @@ export function ProductDetail({
 }) {
   const { add } = useCart();
   const router = useRouter();
-  const firstInStock = variants.find((v) => v.available > 0) ?? variants[0];
-  const [selectedId, setSelectedId] = useState(firstInStock?.id ?? "");
+  const [selectedId, setSelectedId] = useState(variants[0]?.id ?? "");
   const [activeIndex, setActiveIndex] = useState(0);
   const [added, setAdded] = useState(false);
 
@@ -55,7 +50,6 @@ export function ProductDetail({
   }, [images, selectedId]);
 
   const active = shown[Math.min(activeIndex, shown.length - 1)] ?? null;
-  const soldOut = !selected || selected.available < 1;
   const onlyOneVariant = variants.length === 1;
 
   function selectVariant(id: string) {
@@ -123,37 +117,27 @@ export function ProductDetail({
                   type="button"
                   className="swatch"
                   data-active={variant.id === selectedId}
-                  disabled={variant.available < 1}
                   onClick={() => selectVariant(variant.id)}
                 >
                   {variant.label}
-                  {variant.available < 1 && <span className="swatch-out"> · sold out</span>}
                 </button>
               ))}
             </div>
-            {selected && selected.available > 0 && selected.available <= 3 && (
-              <p className="hint" style={{ color: "var(--danger)" }}>
-                Only {selected.available} left in {selected.label}.
-              </p>
-            )}
           </div>
         )}
 
         <div className="row-split">
           <strong style={{ fontSize: 22 }}>
-            {selected ? formatKobo(selected.priceKobo) : "—"}
+            {selected ? formatNaira(selected.price) : "—"}
           </strong>
-          <span className="muted">
-            {soldOut ? "Sold out" : `${selected.available} available`}
-          </span>
         </div>
 
         <button
           className="btn"
-          disabled={soldOut}
+          disabled={!selected}
           onClick={() => { add(selectedId); setAdded(true); }}
         >
-          {soldOut ? "Sold out" : "Add to cart"}
+          Add to cart
         </button>
 
         {added && (

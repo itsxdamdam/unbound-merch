@@ -1,70 +1,46 @@
-import * as api from "./api";
-import { FIXTURE_PRODUCTS } from "./fixtures";
+import { PRODUCTS } from "./products";
 import type { CartLine, Product } from "./types";
-import { multiplyKobo, sumKobo } from "./money";
 
-/**
- * Catalogue reads.
- *
- * One switch: with NEXT_PUBLIC_API_URL set, everything comes from the backend.
- * Without it, the placeholder catalogue keeps the storefront developable. There
- * is no fallback for an API that is merely failing — a backend that is down
- * should surface as an error, not as quietly stale prices.
- */
-export function usingFixtures(): boolean {
-  return !api.isApiConfigured();
-}
-
+// Local and synchronous underneath; `async` so pages need not change shape if
+// products ever move behind a request.
 export async function listProducts(category?: string): Promise<Product[]> {
-  if (usingFixtures()) {
-    return category
-      ? FIXTURE_PRODUCTS.filter((p) => p.category === category)
-      : FIXTURE_PRODUCTS;
-  }
-  return api.listProducts(category);
+  return category ? PRODUCTS.filter((p) => p.category === category) : PRODUCTS;
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
-  if (usingFixtures()) {
-    return FIXTURE_PRODUCTS.find((p) => p.slug === slug) ?? null;
-  }
-  return api.getProduct(slug);
+  return PRODUCTS.find((p) => p.slug === slug) ?? null;
 }
 
 export interface ResolvedLine extends CartLine {
   productSlug: string;
   productName: string;
   variantLabel: string;
-  unitPriceKobo: string;
-  available: number;
+  /** Whole naira. */
+  unitPrice: number;
   image: { url: string; alt: string } | null;
 }
 
 export interface ResolvedCart {
   lines: ResolvedLine[];
-  /** Display only. The backend recomputes the real total when the order is created. */
-  totalKobo: string;
+  /** Whole naira. */
+  total: number;
   /** Variant ids no longer in the catalogue; the cart drops them. */
   dropped: string[];
 }
 
 /**
- * Turn stored variant ids into displayable lines.
- *
- * Done here rather than by a "price this cart" endpoint because the catalogue
- * already carries prices, and one fewer round trip is one fewer thing for the
- * backend to implement. It is a preview: `POST /orders` sends ids and
- * quantities only, and the backend prices it again.
+ * Stored variant ids -> displayable lines. `dropped` carries ids no longer in
+ * the catalogue: carts outlive deploys, and those get removed rather than
+ * failing checkout.
  */
 export async function resolveCart(lines: CartLine[]): Promise<ResolvedCart> {
-  if (lines.length === 0) return { lines: [], totalKobo: "0", dropped: [] };
+  if (lines.length === 0) return { lines: [], total: 0, dropped: [] };
 
-  const products = await listProducts();
   const resolved: ResolvedLine[] = [];
   const dropped: string[] = [];
 
   for (const line of lines) {
-    const product = products.find((p) => p.variants.some((v) => v.id === line.variantId));
+    const product = PRODUCTS.find((p) => p.variants.some((v) => v.id === line.variantId));
     const variant = product?.variants.find((v) => v.id === line.variantId);
     if (!product || !variant) {
       dropped.push(line.variantId);
@@ -83,15 +59,14 @@ export async function resolveCart(lines: CartLine[]): Promise<ResolvedCart> {
       productSlug: product.slug,
       productName: product.name,
       variantLabel: variant.label,
-      unitPriceKobo: variant.priceKobo,
-      available: variant.available,
+      unitPrice: variant.price,
       image: image ? { url: image.url, alt: image.alt } : null,
     });
   }
 
   return {
     lines: resolved,
-    totalKobo: sumKobo(resolved.map((l) => multiplyKobo(l.unitPriceKobo, l.quantity))),
+    total: resolved.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0),
     dropped,
   };
 }

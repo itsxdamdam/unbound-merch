@@ -3,20 +3,9 @@
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useState,
 } from "react";
+import type { CartLine } from "./types";
 
-/**
- * The cart holds variant ids and quantities. Nothing else.
- *
- * Deliberately no prices: the browser must never be able to contribute a
- * number that ends up in an order total. createOrder re-reads every price from
- * the database, so the worst a tampered cart can do is order the wrong item at
- * the correct price.
- */
-export interface CartLine {
-  variantId: string;
-  quantity: number;
-}
-
+// Ids and quantities only — no prices, so a stale cart charges today's price.
 const KEY = "unbound-cart-v1";
 
 interface CartApi {
