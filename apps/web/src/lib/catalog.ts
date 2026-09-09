@@ -16,6 +16,8 @@ export interface ResolvedLine extends CartLine {
   /** Whole naira. */
   unitPrice: number;
   image: { url: string; alt: string } | null;
+  /** Carts outlive a product selling out. Blocks checkout until removed. */
+  soldOut: boolean;
 }
 
 export interface ResolvedCart {
@@ -56,6 +58,7 @@ export async function resolveCart(lines: CartLine[]): Promise<ResolvedCart> {
       variantLabel: variant.label,
       unitPrice: variant.price,
       image: image ? { url: image.url, alt: image.alt } : null,
+      soldOut: product.soldOut === true,
     });
   }
 

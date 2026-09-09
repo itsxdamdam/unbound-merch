@@ -26,11 +26,13 @@ export function ProductDetail({
   description,
   images,
   variants,
+  soldOut = false,
 }: {
   name: string;
   description: string;
   images: DetailImage[];
   variants: DetailVariant[];
+  soldOut?: boolean;
 }) {
   const { add } = useCart();
   const router = useRouter();
@@ -137,17 +139,24 @@ export function ProductDetail({
           <strong style={{ fontSize: 22 }}>
             {selected ? formatNaira(selected.price) : "—"}
           </strong>
+          {soldOut && <span className="sold-out-tag sold-out-tag-inline">Sold out</span>}
         </div>
 
         <button
           className="btn"
-          disabled={!selected}
+          disabled={soldOut || !selected}
           onClick={() => { add(selectedId); setAdded(true); }}
         >
-          Add to cart
+          {soldOut ? "Sold out" : "Add to cart"}
         </button>
 
-        {added && (
+        {soldOut && (
+          <p className="hint" style={{ margin: 0 }}>
+            This one has sold out. Everything else in the shop is still available.
+          </p>
+        )}
+
+        {added && !soldOut && (
           <div className="row-split">
             <span className="muted">Added to your cart.</span>
             <button className="btn-link" onClick={() => router.push("/cart")}>

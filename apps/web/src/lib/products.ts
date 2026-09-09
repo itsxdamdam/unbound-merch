@@ -72,6 +72,7 @@ export const PRODUCTS: Product[] = [
       "Purple and red football jersey with lightning-bolt shoulders and a GODACITY chest print.",
     category: "jerseys",
     fromPrice: 17000,
+    soldOut: true,
     variants: sized("jersey", 17000),
     images: [
       {

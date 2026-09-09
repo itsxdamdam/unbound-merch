@@ -32,6 +32,7 @@ export default async function ProductPage({
         description={product.description}
         images={product.images}
         variants={product.variants}
+        soldOut={product.soldOut}
       />
     </>
   );

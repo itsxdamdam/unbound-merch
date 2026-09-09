@@ -39,6 +39,9 @@
   --brand: #5b2be8;
   --brand-ink: #ffffff;
 
+  --soldout: #c62828;
+  --soldout-ink: #ffffff;
+
   --radius: 10px;
   --maxw: 1080px;
   --gutter: 20px;
@@ -295,6 +298,27 @@ h2 { font-size: 18px; letter-spacing: -0.01em; margin: 0 0 12px; }
 /* contain, not cover: cropping a tee to a square cuts the print off. */
 .thumb-img { object-fit: contain; padding: 8%; }
 
+/* Sold out: the tag sits over the plate, and the photo is knocked back so the
+   card still reads as a product but obviously is not for sale. */
+.sold-out-tag {
+  position: absolute; top: 10px; left: 10px; z-index: 1;
+  background: var(--soldout); color: var(--soldout-ink);
+  font-size: 11px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase;
+  padding: 4px 9px; border-radius: 999px;
+}
+.card[data-sold-out="true"] { cursor: default; }
+.card[data-sold-out="true"]:hover {
+  border-color: var(--border);
+  box-shadow: none;
+  transform: none;
+}
+.card[data-sold-out="true"] .thumb-img { opacity: .45; filter: grayscale(.5); }
+.card[data-sold-out="true"] .card-price { color: var(--muted); }
+/* No point flipping to the back of something you cannot buy. */
+.card[data-sold-out="true"]:hover .thumb-img-hover { opacity: 0; }
+
+.sold-out-tag-inline { position: static; }
+
 /* pointer-events: none so the overlay does not swallow the link click. */
 .thumb-img-hover {
   opacity: 0;
@@ -335,7 +359,10 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
   border: 1px solid var(--accent); border-radius: 8px; padding: 10px 16px;
   text-decoration: none; display: inline-block; text-align: center;
 }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:disabled,
+.btn[data-disabled="true"] { opacity: .45; cursor: not-allowed; pointer-events: none; }
+
+.cart-item-soldout { font-size: 12px; font-weight: 600; color: var(--danger); margin-top: 2px; }
 .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--border); }
 .btn-link { background: none; border: none; color: var(--muted); text-decoration: underline; padding: 0; cursor: pointer; font: inherit; }
 

@@ -11,9 +11,11 @@ export function ProductGrid({ items }: { items: Product[] }) {
     <div className="grid">
       {items.map((product) => {
         const [image, hoverImage] = product.images;
-        return (
-          <Link className="card" key={product.slug} href={`/product/${product.slug}`}>
+
+        const body = (
+          <>
             <div className="thumb">
+              {product.soldOut && <span className="sold-out-tag">Sold out</span>}
               {image ? (
                 <>
                   <Image
@@ -42,12 +44,29 @@ export function ProductGrid({ items }: { items: Product[] }) {
             <div className="card-body">
               <span className="card-name">{product.name}</span>
               <span className="card-price">{formatNaira(product.fromPrice)}</span>
-              {product.variants.length > 1 && (
-                <span className="card-meta">
-                  {product.variants.map((v) => v.label).join(" · ")}
-                </span>
+              {product.soldOut ? (
+                <span className="card-meta">Sold out</span>
+              ) : (
+                product.variants.length > 1 && (
+                  <span className="card-meta">
+                    {product.variants.map((v) => v.label).join(" · ")}
+                  </span>
+                )
               )}
             </div>
+          </>
+        );
+
+        // Sold-out cards are a plain div, not a link. Rendering an anchor and
+        // suppressing the click would still be focusable, still show a URL on
+        // hover, and still open in a new tab from the context menu.
+        return product.soldOut ? (
+          <div className="card" key={product.slug} data-sold-out="true">
+            {body}
+          </div>
+        ) : (
+          <Link className="card" key={product.slug} href={`/product/${product.slug}`}>
+            {body}
           </Link>
         );
       })}

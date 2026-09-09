@@ -36,6 +36,8 @@ export default function CartPage() {
     );
   }
 
+  const hasSoldOut = cart.lines.some((line) => line.soldOut);
+
   return (
     <>
       <h1>Your cart</h1>
@@ -61,6 +63,9 @@ export default function CartPage() {
                   <div className="muted" style={{ fontSize: 12 }}>
                     {line.variantLabel} · {formatNaira(line.unitPrice)}
                   </div>
+                  {line.soldOut && (
+                    <div className="cart-item-soldout">Sold out — remove to check out</div>
+                  )}
 
                   <div className="cart-item-controls">
                     {/* A stepper, not a number field: clearing a typed
@@ -103,7 +108,16 @@ export default function CartPage() {
             <span>Subtotal</span>
             <strong style={{ fontSize: 20 }}>{formatNaira(cart.total)}</strong>
           </div>
-          <Link className="btn" href="/checkout">Checkout</Link>
+          {hasSoldOut ? (
+            <>
+              <span className="btn" aria-disabled="true" data-disabled="true">Checkout</span>
+              <p className="hint" style={{ margin: 0 }}>
+                Remove the sold-out item above to continue.
+              </p>
+            </>
+          ) : (
+            <Link className="btn" href="/checkout">Checkout</Link>
+          )}
           <Link className="btn btn-secondary" href="/">Keep shopping</Link>
         </div>
       </div>

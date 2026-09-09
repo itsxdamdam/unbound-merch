@@ -28,6 +28,8 @@ export interface Product {
   category: CategorySlug;
   /** Lowest variant price, for the "from" figure on the grid. Whole naira. */
   fromPrice: Naira;
+  /** Still listed and browsable, but cannot be bought. */
+  soldOut?: boolean;
   variants: ProductVariant[];
   images: ProductImage[];
 }
