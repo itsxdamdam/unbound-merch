@@ -31,10 +31,35 @@ export default function CheckoutPage() {
     );
   }
 
+  // The cart page blocks this too, but /checkout is reachable by URL.
+  const soldOut = cart.lines.filter((line) => line.soldOut);
+  if (soldOut.length > 0) {
+    return (
+      <>
+        <h1>Checkout</h1>
+        <div className="notice notice-error">
+          <strong>
+            {soldOut.length === cart.lines.length
+              ? "Everything in your cart has sold out."
+              : "Some items in your cart have sold out."}
+          </strong>{" "}
+          {soldOut.map((line) => line.productName).join(", ")} can no longer be bought.
+        </div>
+        <p style={{ marginTop: 20 }}>
+          <Link className="btn btn-secondary" href="/cart">Back to cart</Link>
+        </p>
+      </>
+    );
+  }
+
   function onSubmit(formData: FormData) {
     setError(null);
     const resolved = cart;
     if (!resolved) return;
+    if (resolved.lines.some((line) => line.soldOut)) {
+      setError("Something in your cart has sold out. Go back to your cart to remove it.");
+      return;
+    }
 
     startTransition(async () => {
       try {

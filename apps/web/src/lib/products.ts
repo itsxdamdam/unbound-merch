@@ -30,6 +30,7 @@ export const PRODUCTS: Product[] = [
       "Heavyweight black tee. GODACITY across the chest, THE GODACIOUS ONES across the back.",
     category: "tshirts",
     fromPrice: 9000,
+    soldOut: true,
     variants: sized("tshirt-black", 9000),
     images: [
       {
@@ -51,6 +52,7 @@ export const PRODUCTS: Product[] = [
       "White tee with a small chest hit. GODS IN THE CITY across the back.",
     category: "tshirts",
     fromPrice: 9000,
+    soldOut: true,
     variants: sized("tshirt-white", 9000),
     images: [
       {
@@ -94,6 +96,7 @@ export const PRODUCTS: Product[] = [
       "Square print scarf. Brightly coloured skyscrapers seen from below, GODACITY at the centre.",
     category: "scarves",
     fromPrice: 7000,
+    soldOut: true,
     variants: single("scarf-cityscape-blue", 7000),
     images: [
       {
@@ -110,6 +113,7 @@ export const PRODUCTS: Product[] = [
       "Square print scarf. Bold purple, orange and yellow geometry with GODACITY across the middle.",
     category: "scarves",
     fromPrice: 7000,
+    soldOut: true,
     variants: single("scarf-geometric-purple", 7000),
     images: [
       {
@@ -126,6 +130,7 @@ export const PRODUCTS: Product[] = [
       "Six-panel cap with the GODACITY logo and Unbound crest on the front.",
     category: "caps",
     fromPrice: 5000,
+    soldOut: true,
     variants: [
       { id: "cap-black", label: "Black", price: 5000 },
       { id: "cap-purple", label: "Purple", price: 5000 },
@@ -149,6 +154,7 @@ export const PRODUCTS: Product[] = [
     description: "Black cotton tote with the GODACITY logo.",
     category: "tote-bags",
     fromPrice: 5000,
+    soldOut: true,
     variants: single("tote-black", 5000),
     images: [
       {
@@ -164,6 +170,7 @@ export const PRODUCTS: Product[] = [
     description: "Green cotton tote carrying THE GODACIOUS ONES artwork.",
     category: "tote-bags",
     fromPrice: 5000,
+    soldOut: true,
     variants: single("tote-green", 5000),
     images: [
       {
@@ -179,6 +186,7 @@ export const PRODUCTS: Product[] = [
     description: "Red cotton tote with the GODACITY logo.",
     category: "tote-bags",
     fromPrice: 5000,
+    soldOut: true,
     variants: single("tote-red", 5000),
     images: [
       {
