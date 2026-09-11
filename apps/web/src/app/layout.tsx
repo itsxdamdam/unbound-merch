@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CartProvider } from "@/lib/cart";
 import { CartPill } from "@/components/CartPill";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { STORE_OPEN } from "@/lib/store";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -34,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* Categories live in the chips on the shop pages. */}
               <nav className="nav">
                 <ThemeToggle />
-                <CartPill />
+                {STORE_OPEN && <CartPill />}
               </nav>
             </div>
           </header>
